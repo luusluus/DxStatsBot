@@ -127,6 +127,8 @@ namespace DXStats
             {
                 endpoints.MapControllers();
             });
+
+
         }
 
         private async Task<Action> OnApplicationStartedAsync(IServiceScopeFactory scopeFactory)

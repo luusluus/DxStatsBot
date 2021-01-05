@@ -59,13 +59,6 @@ namespace DXStats.Controllers
         {
             var completedOrders = _dxDataRepository.GetCompletedOrdersByWeek();
 
-
-            //var channelId = Convert.ToUInt64(_discordCreds.Value.ChannelId);
-
-
-            //var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
-            //Task.Run(() => discordChannel.SendMessageAsync("Test"));
-
             return Ok(completedOrders);
         }
     }
