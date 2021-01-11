@@ -1,6 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 using DXStats.Configuration;
+using DXStats.Enums;
 using DXStats.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,9 +24,9 @@ namespace DXStats.Services
                 "USD"
             };
 
-        const double interval = 1000 * 60 * 60 * 24 * 7;
+        //const double interval = 1000 * 60 * 60 * 24 * 7;
 
-        //const double interval = 1000;
+        const double interval = 1000 * 60 * 15; // 15 minutes
 
         private int counter = 0;
 
@@ -72,8 +73,8 @@ namespace DXStats.Services
                 var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
                 _dxDataRepository.AddDailySnapshot(
-                    await _dxDataService.GetOneDayCompletedOrders(),
-                    await _dxDataService.GetOneDayTotalVolumePerCoin(string.Join(",", units))
+                    await _dxDataService.GetTotalCompletedOrders(),
+                    await _dxDataService.GetTotalVolumePerCoin(string.Join(",", units))
                 );
 
                 _unitOfWork.Complete();
@@ -83,7 +84,7 @@ namespace DXStats.Services
 
             if (counter == 7)
             {
-                await Publish();
+                //await Publish();
                 counter = 0;
             }
         }
@@ -96,15 +97,15 @@ namespace DXStats.Services
                 {
                     var composeTweetService = scope.ServiceProvider.GetRequiredService<IComposeTweetService>();
 
-                    var mainTweet = await composeTweetService.ComposeTotalVolumeTweet();
+                    var mainTweet = await composeTweetService.ComposeTotalVolumeTweet(TimeInterval.Week);
                     if (!string.IsNullOrEmpty(mainTweet))
                     {
                         Console.WriteLine(mainTweet);
-                        var childrenTweets = await composeTweetService.ComposeVolumePerCoinTweets();
+                        var childrenTweets = await composeTweetService.ComposeVolumePerCoinTweets(TimeInterval.Week);
 
                         childrenTweets.ForEach(ct => Console.WriteLine(ct));
 
-                        var completedOrdersTweet = await composeTweetService.ComposeCompletedOrderTweet();
+                        var completedOrdersTweet = await composeTweetService.ComposeCompletedOrderTweet(TimeInterval.Week);
 
                         Console.WriteLine(completedOrdersTweet);
 

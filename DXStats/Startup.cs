@@ -38,8 +38,9 @@ namespace DXStats
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            // Override env variable DATABASE_DIR to specify directory
             services.AddDbContext<DxStatsDbContext>(opt =>
-                opt.UseSqlite("Data Source=dxstats.db"));
+                opt.UseSqlite($"Data Source={Configuration["DATABASE_DIR"]}/dxstats.db"));
 
             var apiEndpoints = new ApiEndpoints();
             Configuration.GetSection("ApiEndpoints").Bind(apiEndpoints);
@@ -72,10 +73,6 @@ namespace DXStats
                 twitterCredentials.UserAccessSecret
             );
 
-            //services.AddScoped(typeof(DiscordSocketClient));
-
-            //services.AddScoped(typeof(DiscordStartupService));
-
             services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Verbose,
@@ -94,12 +91,11 @@ namespace DXStats
                 .AllowAnyHeader()
                 );
                 //.WithOrigins("http://localhost:44305")
-                // .AllowCredentials()); //localhost:4200 is the default port an angular runs in dev mode with ng serve
 
             });
 
 
-            services.AddHostedService<TimedHostedService>();
+            //services.AddHostedService<TimedHostedService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -112,7 +108,7 @@ namespace DXStats
 
             IServiceScopeFactory _scopeFactory = app.ApplicationServices.GetService(typeof(IServiceScopeFactory)) as IServiceScopeFactory;
 
-            app.ApplicationServices.GetRequiredService<DiscordStartupService>().StartAsync();
+            Task.Run(() => app.ApplicationServices.GetRequiredService<DiscordStartupService>().StartAsync());
             //lifetime.ApplicationStarted.Register(OnApplicationStartedAsync(_scopeFactory).Wait);
 
             //app.UseHttpsRedirection();
@@ -131,50 +127,50 @@ namespace DXStats
 
         }
 
-        private async Task<Action> OnApplicationStartedAsync(IServiceScopeFactory scopeFactory)
-        {
-            try
-            {
-                using (var scope = scopeFactory.CreateScope())
-                {
-                    // start discord
-                    //await scope.ServiceProvider.GetRequiredService<DiscordStartupService>().StartAsync();
+        //private async Task<Action> OnApplicationStartedAsync(IServiceScopeFactory scopeFactory)
+        //{
+        //    try
+        //    {
+        //        using (var scope = scopeFactory.CreateScope())
+        //        {
+        //            // start discord
+        //            //await scope.ServiceProvider.GetRequiredService<DiscordStartupService>().StartAsync();
 
-                    // fetch current dx coins and store in db.
-                    //var _dxDataRepository = scope.ServiceProvider.GetRequiredService<IDxDataRepository>();
-                    //var _blocknetApiService = scope.ServiceProvider.GetRequiredService<IBlocknetApiService>();
-                    //var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        //            // fetch current dx coins and store in db.
+        //            //var _dxDataRepository = scope.ServiceProvider.GetRequiredService<IDxDataRepository>();
+        //            //var _blocknetApiService = scope.ServiceProvider.GetRequiredService<IBlocknetApiService>();
+        //            //var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-                    //var dxCoins = await _blocknetApiService.DxGetTokens();
+        //            //var dxCoins = await _blocknetApiService.DxGetTokens();
 
-                    //var existingDxCoins = _dxDataRepository.GetCoins().Select(c => c.Id).ToList();
+        //            //var existingDxCoins = _dxDataRepository.GetCoins().Select(c => c.Id).ToList();
 
-                    //var coinsAdded = dxCoins.Except(existingDxCoins).ToList();
+        //            //var coinsAdded = dxCoins.Except(existingDxCoins).ToList();
 
-                    //var coinsRemoved = existingDxCoins.Except(dxCoins).ToList();
+        //            //var coinsRemoved = existingDxCoins.Except(dxCoins).ToList();
 
-                    //coinsRemoved.ForEach(cr => _dxDataRepository.RemoveCoin(cr));
+        //            //coinsRemoved.ForEach(cr => _dxDataRepository.RemoveCoin(cr));
 
-                    //coinsAdded.ForEach(ca => _dxDataRepository.AddCoin(new Coin { Id = ca }));
+        //            //coinsAdded.ForEach(ca => _dxDataRepository.AddCoin(new Coin { Id = ca }));
 
-                    //_unitOfWork.Complete();
-                }
+        //            //_unitOfWork.Complete();
+        //        }
 
 
-            }
-            catch (ApplicationException e)
-            {
-                Console.WriteLine(e.StackTrace);
-                throw;
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                Console.WriteLine(e.StackTrace);
-                throw;
-            }
+        //    }
+        //    catch (ApplicationException e)
+        //    {
+        //        Console.WriteLine(e.StackTrace);
+        //        throw;
+        //    }
+        //    catch (ArgumentOutOfRangeException e)
+        //    {
+        //        Console.WriteLine(e.StackTrace);
+        //        throw;
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
     }
 }

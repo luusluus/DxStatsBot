@@ -6,13 +6,13 @@ namespace DXStats.Interfaces
 {
     public interface IDxDataService
     {
-        Task<List<CompletedOrderCount>> GetOneDayCompletedOrders();
+        Task<List<CompletedOrderCount>> GetTotalCompletedOrders();
 
-        Task<List<CoinTradeStatistics>> GetOneDayTotalVolumePerCoin(string units);
+        Task<List<CoinTradeStatistics>> GetTotalVolumePerCoin(string units);
 
-        Task<List<CoinVolume>> GetOneDayTotalVolume(string coin, string units);
+        Task<List<CoinVolume>> GetTotalVolume(string coin, string units);
 
-        Task<int> GetOneDayTotalTradesCount();
+        Task<int> GetTotalTradesCount();
 
         Task<List<OpenOrdersPerMarket>> GetOpenOrdersPerMarket();
     }

@@ -1,9 +1,7 @@
-﻿using Discord.WebSocket;
-using DXStats.Configuration;
-using DXStats.Controllers.Dtos;
+﻿using DXStats.Controllers.Dtos;
+using DXStats.Enums;
 using DXStats.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using System.Linq;
 
 namespace DXStats.Controllers
@@ -13,19 +11,23 @@ namespace DXStats.Controllers
     public class DxStatsController : ControllerBase
     {
         private readonly IDxDataRepository _dxDataRepository;
-        private readonly IOptions<DiscordCredentials> _discordCreds;
-        private readonly DiscordSocketClient _discordSocketClient;
-        public DxStatsController(IDxDataRepository dxDataRepository, IOptions<DiscordCredentials> discordCreds, DiscordSocketClient discordSocketClient)
+        //private readonly IOptions<DiscordCredentials> _discordCreds;
+        //private readonly DiscordSocketClient _discordSocketClient;
+        public DxStatsController(
+            //IOptions<DiscordCredentials> discordCreds, 
+            //DiscordSocketClient discordSocketClient,
+            IDxDataRepository dxDataRepository
+        )
         {
             _dxDataRepository = dxDataRepository;
-            _discordCreds = discordCreds;
-            _discordSocketClient = discordSocketClient;
+            //_discordCreds = discordCreds;
+            //_discordSocketClient = discordSocketClient;
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetWeeklyStatsTotal()
+        public IActionResult GetWeeklyStatsTotal(TimeInterval timeInterval)
         {
-            var total = _dxDataRepository.GetTotalVolumeAndTradesByWeek();
+            var total = _dxDataRepository.GetTotalVolumeAndTrades(timeInterval);
 
             var dto = new TotalVolumeDto
             {
@@ -38,9 +40,9 @@ namespace DXStats.Controllers
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetWeeklyStatsByCoin()
+        public IActionResult GetWeeklyStatsByCoin(TimeInterval timeInterval)
         {
-            var total = _dxDataRepository.GetTotalVolumeAndTradesByWeekAndCoin();
+            var total = _dxDataRepository.GetTotalVolumeAndTradesByCoin(timeInterval);
 
             var dto = total.ToDictionary(x => x.Key, x => new TotalVolumePerCoinDto
             {
@@ -55,9 +57,9 @@ namespace DXStats.Controllers
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetWeeklyCompletedOrders()
+        public IActionResult GetWeeklyCompletedOrders(TimeInterval timeInterval)
         {
-            var completedOrders = _dxDataRepository.GetCompletedOrdersByWeek();
+            var completedOrders = _dxDataRepository.GetTotalCompletedOrders(timeInterval);
 
             return Ok(completedOrders);
         }

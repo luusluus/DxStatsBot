@@ -29,9 +29,9 @@ namespace DXStats.Services
             return JsonConvert.DeserializeObject<List<OpenOrdersPerMarket>>(openOrdersPerMarketResult);
         }
 
-        public async Task<List<CompletedOrderCount>> GetOneDayCompletedOrders()
+        public async Task<List<CompletedOrderCount>> GetTotalCompletedOrders()
         {
-            var completedOrdersResponse = await _client.GetAsync("GetOneDayCompletedOrders");
+            var completedOrdersResponse = await _client.GetAsync("GetTotalCompletedOrders&timeinterval=fifteenminutes");
 
             if (!completedOrdersResponse.IsSuccessStatusCode)
                 throw new ApplicationException();
@@ -41,9 +41,9 @@ namespace DXStats.Services
             return JsonConvert.DeserializeObject<List<CompletedOrderCount>>(completedOrdersResponseResult);
         }
 
-        public async Task<int> GetOneDayTotalTradesCount()
+        public async Task<int> GetTotalTradesCount()
         {
-            var totalTradeCountResponse = await _client.GetAsync("GetOneDayTotalTradesCount");
+            var totalTradeCountResponse = await _client.GetAsync("GetTotalTradesCount&timeinterval=fifteenminutes");
 
             if (!totalTradeCountResponse.IsSuccessStatusCode)
                 throw new ApplicationException();
@@ -53,9 +53,9 @@ namespace DXStats.Services
             return JsonConvert.DeserializeObject<int>(totalTradeCountResult);
         }
 
-        public async Task<List<CoinVolume>> GetOneDayTotalVolume(string coin, string units)
+        public async Task<List<CoinVolume>> GetTotalVolume(string coin, string units)
         {
-            string queryString = "GetOneDayTotalVolume?coin=" + coin + "&units=" + units;
+            string queryString = "GetTotalVolume?coin=" + coin + "&units=" + units + "&timeinterval=fifteenminutes";
 
             var totalVolumeResponse = await _client.GetAsync(queryString);
 
@@ -67,9 +67,9 @@ namespace DXStats.Services
             return JsonConvert.DeserializeObject<List<CoinVolume>>(totalVolumeResult);
         }
 
-        public async Task<List<CoinTradeStatistics>> GetOneDayTotalVolumePerCoin(string units)
+        public async Task<List<CoinTradeStatistics>> GetTotalVolumePerCoin(string units)
         {
-            string queryString = "GetOneDayTotalVolumePerCoin?units=" + units;
+            string queryString = "GetTotalVolumePerCoin?units=" + units + "&timeinterval=fifteenminutes";
 
             var totalVolumePerTradedCoinResponse = await _client.GetAsync(queryString);
 

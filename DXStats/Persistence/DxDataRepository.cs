@@ -1,5 +1,6 @@
 ﻿using DXStats.Domain.Dto;
 using DXStats.Domain.Entity;
+using DXStats.Enums;
 using DXStats.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -92,12 +93,13 @@ namespace DXStats.Persistence
             return _context.Coins.ToList();
         }
 
-        public DayVolume GetTotalVolumeAndTradesByWeek()
+        public DayVolume GetTotalVolumeAndTrades(TimeInterval timeInterval)
         {
-            var lastweek = DateTime.Now.Date.AddDays(-7);
+            var past = getDateTimeFromThePast(timeInterval);
+
             var dayVolumes = _context.DayVolumes
                 .Include(dv => dv.Snapshot)
-                .Where(dv => dv.Snapshot.DateCreated >= lastweek)
+                .Where(dv => dv.Snapshot.DateCreated >= past)
                 .ToList();
 
             return new DayVolume
@@ -109,14 +111,14 @@ namespace DXStats.Persistence
             };
         }
 
-        public Dictionary<string, int> GetCompletedOrdersByWeek()
+        public Dictionary<string, int> GetTotalCompletedOrders(TimeInterval timeInterval)
         {
-            var lastweek = DateTime.Now.Date.AddDays(-7);
+            var past = getDateTimeFromThePast(timeInterval);
 
             return _context.DayCompletedOrders
                 .Include(co => co.Snapshot)
                 .Include(co => co.Coin)
-                .Where(s => s.Snapshot.DateCreated >= lastweek)
+                .Where(s => s.Snapshot.DateCreated >= past)
                 .ToList()
                 .GroupBy(dv => dv.Coin.Id)
                 .Select(g => new
@@ -127,14 +129,14 @@ namespace DXStats.Persistence
                 .ToDictionary(g => g.Key, g => g.SumExecutedOrders);
         }
 
-        public Dictionary<string, DayVolume> GetTotalVolumeAndTradesByWeekAndCoin()
+        public Dictionary<string, DayVolume> GetTotalVolumeAndTradesByCoin(TimeInterval timeInterval)
         {
-            var lastweek = DateTime.Now.Date.AddDays(-7);
+            var past = getDateTimeFromThePast(timeInterval);
 
             return _context.DayVolumes
                  .Include(dv => dv.Snapshot)
                  .Include(dv => dv.Coin)
-                 .Where(dv => dv.Snapshot.DateCreated >= lastweek)
+                 .Where(dv => dv.Snapshot.DateCreated >= past)
                  .ToList()
                  .GroupBy(dv => dv.Coin.Id)
                  .Select(g => new
@@ -154,6 +156,37 @@ namespace DXStats.Persistence
                      CustomCoin = g.SumCustomCoin,
                      NumberOfTrades = g.SumNumberOfTrades
                  });
+        }
+
+        private DateTime getDateTimeFromThePast(TimeInterval timeInterval)
+        {
+            DateTime dateTime;
+
+            switch (timeInterval)
+            {
+                case TimeInterval.FifteenMinutes:
+                    dateTime = DateTime.Now.AddMinutes(-15);
+                    break;
+                case TimeInterval.Hour:
+                    dateTime = DateTime.Now.AddHours(-1);
+                    break;
+                case TimeInterval.Day:
+                    dateTime = DateTime.Now.AddDays(-1);
+                    break;
+                case TimeInterval.Week:
+                    dateTime = DateTime.Now.AddDays(-7);
+                    break;
+                case TimeInterval.Month:
+                    dateTime = DateTime.Now.AddDays(-31);
+                    break;
+                case TimeInterval.Year:
+                    dateTime = DateTime.Now.AddDays(-365);
+                    break;
+                default:
+                    dateTime = DateTime.Now;
+                    break;
+            }
+            return dateTime;
         }
     }
 }

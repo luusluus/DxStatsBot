@@ -3,8 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    run: blockdxtwitterbot
-  name: blockdxtwitterbot
+    run: dxstatsbot
+  name: dxstatsbot
   namespace: luciendev
 spec:
   progressDeadlineSeconds: 600
@@ -12,7 +12,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      run: blockdxtwitterbot
+      run: dxstatsbot
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -22,15 +22,25 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        run: blockdxtwitterbot
+        run: dxstatsbot
     spec:
       containers:
       - image: PLACEHOLDER_IMAGE_LOCATION
         imagePullPolicy: Always
-        name: blockdxtwitterbot
+        name: dxstatsbot
+        env:
+        - name: DATABASE_DIR
+          value: /usr/db
         ports:
         - containerPort: 80
           protocol: TCP
+        volumeMounts:               # 3
+        - name: sqlite-volume       # 3.a
+          mountPath: /usr/db        # 3.b
+      volumes:
+      - name: sqlite-volume         # 2
+        persistentVolumeClaim:
+          claimName: sqlite-pvc     # 1 
         resources: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File

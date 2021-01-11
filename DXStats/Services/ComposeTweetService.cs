@@ -1,4 +1,5 @@
-﻿using DXStats.Interfaces;
+﻿using DXStats.Enums;
+using DXStats.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -72,9 +73,9 @@ namespace DXStats.Services
             return tweets;
         }
 
-        public async Task<string> ComposeCompletedOrderTweet()
+        public async Task<string> ComposeCompletedOrderTweet(TimeInterval timeInterval)
         {
-            var total = _dxDataRepository.GetCompletedOrdersByWeek();
+            var total = _dxDataRepository.GetTotalCompletedOrders(timeInterval);
 
             string tweet = "Completed Orders:\n\n";
 
@@ -86,9 +87,9 @@ namespace DXStats.Services
             return tweet;
         }
 
-        public async Task<List<string>> ComposeVolumePerCoinTweets()
+        public async Task<List<string>> ComposeVolumePerCoinTweets(TimeInterval timeInterval)
         {
-            var total = _dxDataRepository.GetTotalVolumeAndTradesByWeekAndCoin();
+            var total = _dxDataRepository.GetTotalVolumeAndTradesByCoin(timeInterval);
 
             var childrenTweets = new List<string>();
             foreach (var coin in total.Keys)
@@ -114,9 +115,9 @@ namespace DXStats.Services
             }
             return childrenTweets;
         }
-        public async Task<string> ComposeTotalVolumeTweet()
+        public async Task<string> ComposeTotalVolumeTweet(TimeInterval timeInterval)
         {
-            var total = _dxDataRepository.GetTotalVolumeAndTradesByWeek();
+            var total = _dxDataRepository.GetTotalVolumeAndTrades(timeInterval);
 
             string tweet = "1 Week @BlockDXExchange Statistics (" + DateTime.Now.ToUniversalTime().ToString("MMMM d yyyy") + " UTC)"
                 + "\n\nTotal Trading Volume:"
