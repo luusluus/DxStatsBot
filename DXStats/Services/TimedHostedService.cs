@@ -82,7 +82,7 @@ namespace DXStats.Services
 
             counter++;
 
-            if (counter == 7)
+            if (counter == 7) //TODO: publish each week, 15 minutes counter incremented.
             {
                 //await Publish();
                 counter = 0;
