@@ -30,7 +30,8 @@ items:
           imagePullPolicy: Always
           name: dxstatsbot
           env:
-          - name: /usr/db
+          - name: DATABASE_DIR
+            value: /usr/db
           ports:
           - containerPort: 8090
             protocol: TCP
