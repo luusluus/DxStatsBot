@@ -47,7 +47,7 @@ items:
         terminationGracePeriodSeconds: 30
         volumes:
         - name: sqlite-volume
-          persistenVolumeClaim:
+          persistentVolumeClaim:
             claimName: sqlite-pvc
 - apiVersion: v1
   kind: Service
