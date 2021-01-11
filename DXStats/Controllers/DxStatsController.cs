@@ -11,21 +11,15 @@ namespace DXStats.Controllers
     public class DxStatsController : ControllerBase
     {
         private readonly IDxDataRepository _dxDataRepository;
-        //private readonly IOptions<DiscordCredentials> _discordCreds;
-        //private readonly DiscordSocketClient _discordSocketClient;
         public DxStatsController(
-            //IOptions<DiscordCredentials> discordCreds, 
-            //DiscordSocketClient discordSocketClient,
             IDxDataRepository dxDataRepository
         )
         {
             _dxDataRepository = dxDataRepository;
-            //_discordCreds = discordCreds;
-            //_discordSocketClient = discordSocketClient;
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetWeeklyStatsTotal(TimeInterval timeInterval)
+        public IActionResult GetTotalVolumeAndTrades(TimeInterval timeInterval)
         {
             var total = _dxDataRepository.GetTotalVolumeAndTrades(timeInterval);
 
@@ -40,7 +34,7 @@ namespace DXStats.Controllers
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetWeeklyStatsByCoin(TimeInterval timeInterval)
+        public IActionResult GetTotalVolumeAndTradesByCoin(TimeInterval timeInterval)
         {
             var total = _dxDataRepository.GetTotalVolumeAndTradesByCoin(timeInterval);
 
@@ -57,7 +51,7 @@ namespace DXStats.Controllers
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetWeeklyCompletedOrders(TimeInterval timeInterval)
+        public IActionResult GetTotalCompletedOrders(TimeInterval timeInterval)
         {
             var completedOrders = _dxDataRepository.GetTotalCompletedOrders(timeInterval);
 

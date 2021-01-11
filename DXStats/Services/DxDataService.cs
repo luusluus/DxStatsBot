@@ -31,7 +31,7 @@ namespace DXStats.Services
 
         public async Task<List<CompletedOrderCount>> GetTotalCompletedOrders()
         {
-            var completedOrdersResponse = await _client.GetAsync("GetTotalCompletedOrders&timeinterval=fifteenminutes");
+            var completedOrdersResponse = await _client.GetAsync("GetTotalCompletedOrders?timeinterval=fifteenminutes");
 
             if (!completedOrdersResponse.IsSuccessStatusCode)
                 throw new ApplicationException();
@@ -43,7 +43,7 @@ namespace DXStats.Services
 
         public async Task<int> GetTotalTradesCount()
         {
-            var totalTradeCountResponse = await _client.GetAsync("GetTotalTradesCount&timeinterval=fifteenminutes");
+            var totalTradeCountResponse = await _client.GetAsync("GetTotalTradesCount?timeinterval=fifteenminutes");
 
             if (!totalTradeCountResponse.IsSuccessStatusCode)
                 throw new ApplicationException();

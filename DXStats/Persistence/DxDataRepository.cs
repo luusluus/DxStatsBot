@@ -115,7 +115,7 @@ namespace DXStats.Persistence
         {
             var past = getDateTimeFromThePast(timeInterval);
 
-            return _context.DayCompletedOrders
+            var dco = _context.DayCompletedOrders
                 .Include(co => co.Snapshot)
                 .Include(co => co.Coin)
                 .Where(s => s.Snapshot.DateCreated >= past)
@@ -127,13 +127,23 @@ namespace DXStats.Persistence
                     SumExecutedOrders = g.Sum(dv => dv.Count)
                 })
                 .ToDictionary(g => g.Key, g => g.SumExecutedOrders);
+
+            var coins = GetCoins();
+
+            var nonZeroVolumeCoins = new List<string>(dco.Keys);
+
+            var zeroVolumeCoins = coins.Select(c => c.Id).Except(nonZeroVolumeCoins).ToList();
+
+            zeroVolumeCoins.ForEach(zvc => dco.Add(zvc, 0));
+
+            return dco;
         }
 
         public Dictionary<string, DayVolume> GetTotalVolumeAndTradesByCoin(TimeInterval timeInterval)
         {
             var past = getDateTimeFromThePast(timeInterval);
 
-            return _context.DayVolumes
+            var dv = _context.DayVolumes
                  .Include(dv => dv.Snapshot)
                  .Include(dv => dv.Coin)
                  .Where(dv => dv.Snapshot.DateCreated >= past)
@@ -156,6 +166,22 @@ namespace DXStats.Persistence
                      CustomCoin = g.SumCustomCoin,
                      NumberOfTrades = g.SumNumberOfTrades
                  });
+
+            var coins = GetCoins();
+
+            var nonZeroVolumeCoins = new List<string>(dv.Keys);
+
+            var zeroVolumeCoins = coins.Select(c => c.Id).Except(nonZeroVolumeCoins).ToList();
+
+            zeroVolumeCoins.ForEach(zvc => dv.Add(zvc, new DayVolume
+            {
+                BLOCK = 0,
+                BTC = 0,
+                USD = 0,
+                NumberOfTrades = 0
+            }));
+
+            return dv;
         }
 
         private DateTime getDateTimeFromThePast(TimeInterval timeInterval)

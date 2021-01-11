@@ -95,7 +95,7 @@ namespace DXStats
             });
 
 
-            //services.AddHostedService<TimedHostedService>();
+            services.AddHostedService<TimedHostedService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -109,7 +109,6 @@ namespace DXStats
             IServiceScopeFactory _scopeFactory = app.ApplicationServices.GetService(typeof(IServiceScopeFactory)) as IServiceScopeFactory;
 
             Task.Run(() => app.ApplicationServices.GetRequiredService<DiscordStartupService>().StartAsync());
-            //lifetime.ApplicationStarted.Register(OnApplicationStartedAsync(_scopeFactory).Wait);
 
             //app.UseHttpsRedirection();
 
@@ -126,51 +125,6 @@ namespace DXStats
 
 
         }
-
-        //private async Task<Action> OnApplicationStartedAsync(IServiceScopeFactory scopeFactory)
-        //{
-        //    try
-        //    {
-        //        using (var scope = scopeFactory.CreateScope())
-        //        {
-        //            // start discord
-        //            //await scope.ServiceProvider.GetRequiredService<DiscordStartupService>().StartAsync();
-
-        //            // fetch current dx coins and store in db.
-        //            //var _dxDataRepository = scope.ServiceProvider.GetRequiredService<IDxDataRepository>();
-        //            //var _blocknetApiService = scope.ServiceProvider.GetRequiredService<IBlocknetApiService>();
-        //            //var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-
-        //            //var dxCoins = await _blocknetApiService.DxGetTokens();
-
-        //            //var existingDxCoins = _dxDataRepository.GetCoins().Select(c => c.Id).ToList();
-
-        //            //var coinsAdded = dxCoins.Except(existingDxCoins).ToList();
-
-        //            //var coinsRemoved = existingDxCoins.Except(dxCoins).ToList();
-
-        //            //coinsRemoved.ForEach(cr => _dxDataRepository.RemoveCoin(cr));
-
-        //            //coinsAdded.ForEach(ca => _dxDataRepository.AddCoin(new Coin { Id = ca }));
-
-        //            //_unitOfWork.Complete();
-        //        }
-
-
-        //    }
-        //    catch (ApplicationException e)
-        //    {
-        //        Console.WriteLine(e.StackTrace);
-        //        throw;
-        //    }
-        //    catch (ArgumentOutOfRangeException e)
-        //    {
-        //        Console.WriteLine(e.StackTrace);
-        //        throw;
-        //    }
-
-        //    return null;
-        //}
 
     }
 }
