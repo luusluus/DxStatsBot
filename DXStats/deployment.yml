@@ -1,66 +1,66 @@
 apiVersion: v1
 items:
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-        labels:
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      run: dxstatsbot
+    name: dxstatsbot
+    namespace: luciendev
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
         run: dxstatsbot
-        name: dxstatsbot
-        namespace: luciendev
-    spec:
-        progressDeadlineSeconds: 600
-        replicas: 1
-        revisionHistoryLimit: 10
-        selector:
-        matchLabels:
-            run: dxstatsbot
-        strategy:
-        rollingUpdate:
-            maxSurge: 25%
-            maxUnavailable: 25%
-        type: RollingUpdate
-        template:
-        metadata:
-            creationTimestamp: null
-            labels:
-            run: dxstatsbot
-        spec:
-            containers:
-            - image: PLACEHOLDER_IMAGE_LOCATION
-            imagePullPolicy: Always
-            name: dxstatsbot
-            env:
-            - name: DATABASE_DIR
-                value: /usr/db
-            ports:
-            - containerPort: 8090
-                protocol: TCP
-            volumeMounts:               # 3
-            - name: sqlite-volume       # 3.a
-                mountPath: /usr/db        # 3.b
-            volumes:
-            - name: sqlite-volume         # 2
-            persistentVolumeClaim:
-                claimName: sqlite-pvc     # 1 
-            dnsPolicy: ClusterFirst
-            restartPolicy: Always
-            schedulerName: default-scheduler
-            securityContext: {}
-            terminationGracePeriodSeconds: 30
-     apiVersion: v1
-      kind: Service
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
       metadata:
-        name: dxstatsbot
-        namespace: luciendev
-      spec:
-        ports:
-        - port: 8090
-          protocol: TCP
-          targetPort: 8090
-        selector:
+        creationTimestamp: null
+        labels:
           run: dxstatsbot
-        sessionAffinity: None
-        type: ClusterIP
-      status:
-        loadBalancer: {}
+      spec:
+        containers:
+        - image: PLACEHOLDER_IMAGE_LOCATION
+          imagePullPolicy: Always
+          name: dxstatsbot
+          env:
+          - name: DATABASE_DIR
+            value: /usr/db
+          ports:
+          - containerPort: 8090
+            protocol: TCP
+          volumeMounts:               # 3
+          - name: sqlite-volume       # 3.a
+            mountPath: /usr/db        # 3.b
+        volumes:
+        - name: sqlite-volume         # 2
+          persistentVolumeClaim:
+            claimName: sqlite-pvc     # 1 
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: dxstatsbot
+    namespace: luciendev
+  spec:
+    ports:
+    - port: 8090
+      protocol: TCP
+      targetPort: 8090
+    selector:
+      run: dxstatsbot
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
 kind: List
