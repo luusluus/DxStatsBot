@@ -41,9 +41,6 @@ spec:
       - name: sqlite-volume         # 2
         persistentVolumeClaim:
           claimName: sqlite-pvc     # 1 
-        resources: {}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
