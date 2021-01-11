@@ -52,7 +52,7 @@ jobs:
         uses: jacobtomlinson/gha-find-replace@master
         with:
           find: PLACEHOLDER_IMAGE_LOCATION
-          replace:  lucienmartijn/dxstatsbot:${{ github.sha }}
+          replace:  lucienmartijn/dxstats:${{ github.sha }}
           
         
       - name: Deploy Docker Image
