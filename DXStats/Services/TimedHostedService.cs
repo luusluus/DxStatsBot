@@ -24,7 +24,7 @@ namespace DXStats.Services
                 "USD"
             };
 
-        const double interval = 1000 * 60 * 15; // 15 minutes
+        const double interval = 1000 * 60 * 5; // 5 minutes
 
         private int counter = 0;
 
@@ -80,7 +80,7 @@ namespace DXStats.Services
 
             counter++;
 
-            if (counter == 672) // 1440 blocks/minutes in a day. 7 days: 1440*7. (1440*7)/15 = 672 * 15 minutes
+            if (counter == 2016) // 1440 blocks/minutes in a day. 7 days: 1440*7. (1440*7)/5 = 2016 * 5 minutes
             {
                 await Publish();
                 counter = 0;

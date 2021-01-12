@@ -184,6 +184,120 @@ namespace DXStats.Persistence
             return dv;
         }
 
+        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByPeriod(Period period)
+        {
+            var timespan = getTimeSpanFromPeriod(period);
+
+            var past = getDateTimeFromPeriod(period);
+
+            return
+                _context.DayVolumes
+                .Include(dv => dv.Snapshot)
+                .Include(dv => dv.Coin)
+                .Where(dv => dv.Snapshot.DateCreated >= past)
+                .ToList()
+                .GroupBy(dv => dv.Snapshot.DateCreated.Ticks / timespan.Ticks)
+                .Select(g => new TotalVolumeAndTradeCountInterval
+                {
+                    Timestamp = g.Last().Snapshot.DateCreated,
+                    USD = g.Sum(dv => dv.USD),
+                    BLOCK = g.Sum(dv => dv.BLOCK),
+                    BTC = g.Sum(dv => dv.BTC),
+                    CustomCoin = g.Sum(dv => dv.CustomCoin),
+                    TradeCount = g.Sum(dv => dv.NumberOfTrades)
+                })
+                .ToList();
+        }
+
+        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByPeriodAndCoin(Period period, string coin)
+        {
+            var timespan = getTimeSpanFromPeriod(period);
+
+            var past = getDateTimeFromPeriod(period);
+
+            return
+                _context.DayVolumes
+                .Include(dv => dv.Snapshot)
+                .Include(dv => dv.Coin)
+                .Where(dv => dv.Coin.Id.Equals(coin) && dv.Snapshot.DateCreated >= past)
+                .ToList()
+                .GroupBy(dv => dv.Snapshot.DateCreated.Ticks / timespan.Ticks)
+
+                .Select(g => new TotalVolumeAndTradeCountInterval
+                {
+                    Timestamp = g.Last().Snapshot.DateCreated,
+                    USD = g.Sum(dv => dv.USD),
+                    BLOCK = g.Sum(dv => dv.BLOCK),
+                    BTC = g.Sum(dv => dv.BTC),
+                    CustomCoin = g.Sum(dv => dv.CustomCoin),
+                    TradeCount = g.Sum(dv => dv.NumberOfTrades)
+                })
+                .ToList();
+        }
+
+        private DateTime getDateTimeFromPeriod(Period period)
+        {
+            DateTime dateTime;
+
+            switch (period)
+            {
+                case Period.Day:
+                    dateTime = DateTime.Now.AddDays(-1);
+                    break;
+                case Period.Week:
+                    dateTime = DateTime.Now.AddDays(-7);
+                    break;
+                case Period.Month:
+                    dateTime = DateTime.Now.AddDays(-31);
+                    break;
+                case Period.ThreeMonths:
+                    dateTime = DateTime.Now.AddDays(-93);
+                    break;
+                case Period.Year:
+                    dateTime = DateTime.Now.AddDays(-365);
+                    break;
+                case Period.All:
+                    dateTime = DateTime.MinValue;
+                    break;
+                default:
+                    dateTime = DateTime.MinValue;
+                    break;
+            }
+            return dateTime;
+        }
+
+        private TimeSpan getTimeSpanFromPeriod(Period period)
+        {
+            TimeSpan timespan;
+
+            switch (period)
+            {
+                case Period.Day:
+                    timespan = TimeSpan.FromMinutes(5);
+                    break;
+                case Period.Week:
+                    timespan = TimeSpan.FromMinutes(15);
+                    break;
+                case Period.Month:
+                    timespan = TimeSpan.FromHours(1);
+                    break;
+                case Period.ThreeMonths:
+                    timespan = TimeSpan.FromHours(2);
+                    break;
+                case Period.Year:
+                    timespan = TimeSpan.FromDays(1);
+                    break;
+                case Period.All:
+                    timespan = TimeSpan.FromDays(1);
+                    break;
+                default:
+                    timespan = TimeSpan.Zero;
+                    break;
+
+            }
+            return timespan;
+        }
+
         private DateTime getDateTimeFromThePast(TimeInterval timeInterval)
         {
             DateTime dateTime;

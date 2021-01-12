@@ -57,5 +57,22 @@ namespace DXStats.Controllers
 
             return Ok(completedOrders);
         }
+
+        [HttpGet("[action]")]
+        public IActionResult GetVolumeAndTradeCountByPeriod(Period period)
+        {
+            return Ok(_dxDataRepository.GetVolumeAndTradeCountByPeriod(period));
+        }
+
+        [HttpGet("[action]")]
+        public IActionResult GetVolumeAndTradeCountByPeriodAndCoin(Period period, string coin)
+        {
+            var coins = _dxDataRepository.GetCoins().Select(c => c.Id).ToList();
+
+            if (!coins.Contains(coin))
+                return BadRequest("Coin not listed");
+
+            return Ok(_dxDataRepository.GetVolumeAndTradeCountByPeriodAndCoin(period, coin));
+        }
     }
 }
