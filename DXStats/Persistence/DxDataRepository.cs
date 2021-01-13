@@ -93,9 +93,9 @@ namespace DXStats.Persistence
             return _context.Coins.ToList();
         }
 
-        public DayVolume GetTotalVolumeAndTrades(TimeInterval timeInterval)
+        public DayVolume GetTotalVolumeAndTradesByElapsedTime(ElapsedTime elapsedTime)
         {
-            var past = getDateTimeFromThePast(timeInterval);
+            var past = getDateTimeFromElapsedTime(elapsedTime);
 
             var dayVolumes = _context.DayVolumes
                 .Include(dv => dv.Snapshot)
@@ -111,9 +111,9 @@ namespace DXStats.Persistence
             };
         }
 
-        public Dictionary<string, int> GetTotalCompletedOrders(TimeInterval timeInterval)
+        public Dictionary<string, int> GetTotalCompletedOrdersByElapsedTime(ElapsedTime elapsedTime)
         {
-            var past = getDateTimeFromThePast(timeInterval);
+            var past = getDateTimeFromElapsedTime(elapsedTime);
 
             var dco = _context.DayCompletedOrders
                 .Include(co => co.Snapshot)
@@ -139,9 +139,9 @@ namespace DXStats.Persistence
             return dco;
         }
 
-        public Dictionary<string, DayVolume> GetTotalVolumeAndTradesByCoin(TimeInterval timeInterval)
+        public Dictionary<string, DayVolume> GetTotalVolumeAndTradesByCoinAndElapsedTime(ElapsedTime elapsedTime)
         {
-            var past = getDateTimeFromThePast(timeInterval);
+            var past = getDateTimeFromElapsedTime(elapsedTime);
 
             var dv = _context.DayVolumes
                  .Include(dv => dv.Snapshot)
@@ -184,11 +184,11 @@ namespace DXStats.Persistence
             return dv;
         }
 
-        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByPeriod(Period period)
+        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByElapsedTime(ElapsedTime elapsedTime)
         {
-            var timespan = getTimeSpanFromPeriod(period);
+            var timespan = getTimeSpanFromElapsedTime(elapsedTime);
 
-            var past = getDateTimeFromPeriod(period);
+            var past = getDateTimeFromElapsedTime(elapsedTime);
 
             return
                 _context.DayVolumes
@@ -209,11 +209,11 @@ namespace DXStats.Persistence
                 .ToList();
         }
 
-        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByPeriodAndCoin(Period period, string coin)
+        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByElapsedTimeAndCoin(ElapsedTime elapsedTime, string coin)
         {
-            var timespan = getTimeSpanFromPeriod(period);
+            var timespan = getTimeSpanFromElapsedTime(elapsedTime);
 
-            var past = getDateTimeFromPeriod(period);
+            var past = getDateTimeFromElapsedTime(elapsedTime);
 
             return
                 _context.DayVolumes
@@ -235,30 +235,43 @@ namespace DXStats.Persistence
                 .ToList();
         }
 
-        private DateTime getDateTimeFromPeriod(Period period)
+        private DateTime getDateTimeFromElapsedTime(ElapsedTime elapsedTime)
         {
             DateTime dateTime;
 
-            switch (period)
+            switch (elapsedTime)
             {
-                case Period.Day:
+                case ElapsedTime.FiveMinutes:
+                    dateTime = DateTime.Now.AddMinutes(-5);
+                    break;
+                case ElapsedTime.FifteenMinutes:
+                    dateTime = DateTime.Now.AddMinutes(-15);
+                    break;
+                case ElapsedTime.Hour:
+                    dateTime = DateTime.Now.AddHours(-1);
+                    break;
+                case ElapsedTime.TwoHours:
+                    dateTime = DateTime.Now.AddHours(-2);
+                    break;
+                case ElapsedTime.Day:
                     dateTime = DateTime.Now.AddDays(-1);
                     break;
-                case Period.Week:
+                case ElapsedTime.Week:
                     dateTime = DateTime.Now.AddDays(-7);
                     break;
-                case Period.Month:
+                case ElapsedTime.Month:
                     dateTime = DateTime.Now.AddDays(-31);
                     break;
-                case Period.ThreeMonths:
+                case ElapsedTime.ThreeMonths:
                     dateTime = DateTime.Now.AddDays(-93);
                     break;
-                case Period.Year:
+                case ElapsedTime.Year:
                     dateTime = DateTime.Now.AddDays(-365);
                     break;
-                case Period.All:
+                case ElapsedTime.All:
                     dateTime = DateTime.MinValue;
                     break;
+
                 default:
                     dateTime = DateTime.MinValue;
                     break;
@@ -266,67 +279,35 @@ namespace DXStats.Persistence
             return dateTime;
         }
 
-        private TimeSpan getTimeSpanFromPeriod(Period period)
+        private TimeSpan getTimeSpanFromElapsedTime(ElapsedTime elapsedTime)
         {
             TimeSpan timespan;
 
-            switch (period)
+            switch (elapsedTime)
             {
-                case Period.Day:
+                case ElapsedTime.Hour:
                     timespan = TimeSpan.FromMinutes(5);
                     break;
-                case Period.Week:
+                case ElapsedTime.Week:
                     timespan = TimeSpan.FromMinutes(15);
                     break;
-                case Period.Month:
+                case ElapsedTime.Month:
                     timespan = TimeSpan.FromHours(1);
                     break;
-                case Period.ThreeMonths:
+                case ElapsedTime.ThreeMonths:
                     timespan = TimeSpan.FromHours(2);
                     break;
-                case Period.Year:
+                case ElapsedTime.Year:
                     timespan = TimeSpan.FromDays(1);
                     break;
-                case Period.All:
+                case ElapsedTime.All:
                     timespan = TimeSpan.FromDays(1);
                     break;
                 default:
                     timespan = TimeSpan.Zero;
                     break;
-
             }
             return timespan;
-        }
-
-        private DateTime getDateTimeFromThePast(TimeInterval timeInterval)
-        {
-            DateTime dateTime;
-
-            switch (timeInterval)
-            {
-                case TimeInterval.FifteenMinutes:
-                    dateTime = DateTime.Now.AddMinutes(-15);
-                    break;
-                case TimeInterval.Hour:
-                    dateTime = DateTime.Now.AddHours(-1);
-                    break;
-                case TimeInterval.Day:
-                    dateTime = DateTime.Now.AddDays(-1);
-                    break;
-                case TimeInterval.Week:
-                    dateTime = DateTime.Now.AddDays(-7);
-                    break;
-                case TimeInterval.Month:
-                    dateTime = DateTime.Now.AddDays(-31);
-                    break;
-                case TimeInterval.Year:
-                    dateTime = DateTime.Now.AddDays(-365);
-                    break;
-                default:
-                    dateTime = DateTime.Now;
-                    break;
-            }
-            return dateTime;
         }
     }
 }

@@ -95,15 +95,15 @@ namespace DXStats.Services
                 {
                     var composeTweetService = scope.ServiceProvider.GetRequiredService<IComposeTweetService>();
 
-                    var mainTweet = await composeTweetService.ComposeTotalVolumeTweet(TimeInterval.Week);
+                    var mainTweet = await composeTweetService.ComposeTotalVolumeTweet(ElapsedTime.Week);
                     if (!string.IsNullOrEmpty(mainTweet))
                     {
                         Console.WriteLine(mainTweet);
-                        var childrenTweets = await composeTweetService.ComposeVolumePerCoinTweets(TimeInterval.Week);
+                        var childrenTweets = await composeTweetService.ComposeVolumePerCoinTweets(ElapsedTime.Week);
 
                         childrenTweets.ForEach(ct => Console.WriteLine(ct));
 
-                        var completedOrdersTweet = await composeTweetService.ComposeCompletedOrderTweet(TimeInterval.Week);
+                        var completedOrdersTweet = await composeTweetService.ComposeCompletedOrderTweet(ElapsedTime.Week);
 
                         Console.WriteLine(completedOrdersTweet);
 
@@ -140,7 +140,7 @@ namespace DXStats.Services
                         var channelId = Convert.ToUInt64(_discordCredentials.Value.ChannelId);
 
                         var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
-                        await discordChannel.SendMessageAsync("test");
+                        await discordChannel.SendMessageAsync(parentTweet.Url);
                     }
                 }
             }

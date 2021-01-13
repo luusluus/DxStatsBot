@@ -19,9 +19,9 @@ namespace DXStats.Controllers
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetTotalVolumeAndTrades(TimeInterval timeInterval)
+        public IActionResult GetTotalVolumeAndTrades(ElapsedTime elapsedTime)
         {
-            var total = _dxDataRepository.GetTotalVolumeAndTrades(timeInterval);
+            var total = _dxDataRepository.GetTotalVolumeAndTradesByElapsedTime(elapsedTime);
 
             var dto = new TotalVolumeDto
             {
@@ -34,9 +34,9 @@ namespace DXStats.Controllers
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetTotalVolumeAndTradesByCoin(TimeInterval timeInterval)
+        public IActionResult GetTotalVolumeAndTradesByCoin(ElapsedTime elapsedTime)
         {
-            var total = _dxDataRepository.GetTotalVolumeAndTradesByCoin(timeInterval);
+            var total = _dxDataRepository.GetTotalVolumeAndTradesByCoinAndElapsedTime(elapsedTime);
 
             var dto = total.ToDictionary(x => x.Key, x => new TotalVolumePerCoinDto
             {
@@ -51,28 +51,34 @@ namespace DXStats.Controllers
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetTotalCompletedOrders(TimeInterval timeInterval)
+        public IActionResult GetTotalCompletedOrders(ElapsedTime elapsedTime)
         {
-            var completedOrders = _dxDataRepository.GetTotalCompletedOrders(timeInterval);
+            var completedOrders = _dxDataRepository.GetTotalCompletedOrdersByElapsedTime(elapsedTime);
 
             return Ok(completedOrders);
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetVolumeAndTradeCountByPeriod(Period period)
+        public IActionResult GetVolumeAndTradeCountByElapsedTime(ElapsedTime elapsedTime)
         {
-            return Ok(_dxDataRepository.GetVolumeAndTradeCountByPeriod(period));
+            if (elapsedTime.Equals(ElapsedTime.FiveMinutes) || elapsedTime.Equals(ElapsedTime.FifteenMinutes) || elapsedTime.Equals(ElapsedTime.Hour) || elapsedTime.Equals(ElapsedTime.TwoHours))
+                return BadRequest("Lower boundary is one hour");
+
+            return Ok(_dxDataRepository.GetVolumeAndTradeCountByElapsedTime(elapsedTime));
         }
 
         [HttpGet("[action]")]
-        public IActionResult GetVolumeAndTradeCountByPeriodAndCoin(Period period, string coin)
+        public IActionResult GetVolumeAndTradeCountByElapsedTimeAndCoin(ElapsedTime elapsedTime, string coin)
         {
+            if (elapsedTime.Equals(ElapsedTime.FiveMinutes) || elapsedTime.Equals(ElapsedTime.FifteenMinutes) || elapsedTime.Equals(ElapsedTime.Hour) || elapsedTime.Equals(ElapsedTime.TwoHours))
+                return BadRequest("Lower boundary is one hour");
+
             var coins = _dxDataRepository.GetCoins().Select(c => c.Id).ToList();
 
             if (!coins.Contains(coin))
                 return BadRequest("Coin not listed");
 
-            return Ok(_dxDataRepository.GetVolumeAndTradeCountByPeriodAndCoin(period, coin));
+            return Ok(_dxDataRepository.GetVolumeAndTradeCountByElapsedTimeAndCoin(elapsedTime, coin));
         }
     }
 }

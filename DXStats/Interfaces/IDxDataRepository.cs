@@ -9,13 +9,13 @@ namespace DXStats.Interfaces
     {
         void AddDailySnapshot(List<CompletedOrderCount> completedOrders, List<CoinTradeStatistics> coinTradeStatistics);
 
-        DayVolume GetTotalVolumeAndTrades(TimeInterval timeInterval);
-        Dictionary<string, DayVolume> GetTotalVolumeAndTradesByCoin(TimeInterval timeInterval);
-        Dictionary<string, int> GetTotalCompletedOrders(TimeInterval timeInterval);
+        DayVolume GetTotalVolumeAndTradesByElapsedTime(ElapsedTime elapsedTime);
+        Dictionary<string, DayVolume> GetTotalVolumeAndTradesByCoinAndElapsedTime(ElapsedTime elapsedTime);
+        Dictionary<string, int> GetTotalCompletedOrdersByElapsedTime(ElapsedTime elapsedTime);
 
-        List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByPeriod(Period period);
+        List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByElapsedTime(ElapsedTime elapsedTime);
 
-        List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByPeriodAndCoin(Period period, string coin);
+        List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByElapsedTimeAndCoin(ElapsedTime elapsedTime, string coin);
 
         void AddCoin(Coin coin);
         void RemoveCoin(string coin);

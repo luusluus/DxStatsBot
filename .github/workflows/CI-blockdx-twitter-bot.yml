@@ -21,6 +21,42 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
+      - name: Find and Replace deployment twitter consumer key
+        uses: jacobtomlinson/gha-find-replace@master
+        with:
+          find: TWITTER_CONSUMER_KEY
+          replace: ${{ secrets.TWITTER_CONSUMER_KEY }}
+          
+      - name: Find and Replace deployment twitter consumer secret
+        uses: jacobtomlinson/gha-find-replace@master
+        with:
+          find: TWITTER_CONSUMER_SECRET
+          replace: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+         
+      - name: Find and Replace deployment twitter user access token
+        uses: jacobtomlinson/gha-find-replace@master
+        with:
+          find: TWITTER_USER_ACCESS_TOKEN
+          replace: ${{ secrets.TWITTER_USER_ACCESS_TOKEN }}
+          
+      - name: Find and Replace deployment twitter user access secret
+        uses: jacobtomlinson/gha-find-replace@master
+        with:
+          find: TWITTER_USER_ACCESS_SECRET
+          replace: ${{ secrets.TWITTER_USER_ACCESS_SECRET }}
+          
+      - name: Find and Replace deployment discord token
+        uses: jacobtomlinson/gha-find-replace@master
+        with:
+          find: DISCORD_TOKEN
+          replace: ${{ secrets.DISCORD_TOKEN }}
+          
+      - name: Find and Replace deployment discord token
+        uses: jacobtomlinson/gha-find-replace@master
+        with:
+          find: DISCORD_CHANNEL_ID
+          replace: ${{ secrets.DISCORD_CHANNEL_ID }}
           
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1      
@@ -40,13 +76,6 @@ jobs:
           cache-from: "type=registry,ref=lucienmartijn/dxstats:${{ github.sha }}"
           cache-to: type=inline
           tags: "lucienmartijn/dxstats:${{ github.sha }}"
-          secrets: |
-            "Twitter:consumerKey=${{ secrets.TWITTER_CONSUMER_KEY }}"
-            "Twitter:consumerSecret=${{ secrets.TWITTER_CONSUMER_SECRET }}"
-            "Twitter:userAccessToken=${{ secrets.TWITTER_USER_ACCESS_TOKEN }}"
-            "Twitter:userAccessSecret=${{ secrets.TWITTER_USER_ACCESS_SECRET }}"
-            "Discord:token=${{ secrets.DISCORD_TOKEN }}"
-            "Discord:channelId=${{ secrets.DISCORD_CHANNEL_ID }}"
           
       - name: Find and Replace deployment manifest
         uses: jacobtomlinson/gha-find-replace@master

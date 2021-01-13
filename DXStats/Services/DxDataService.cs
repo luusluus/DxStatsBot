@@ -31,7 +31,7 @@ namespace DXStats.Services
 
         public async Task<List<CompletedOrderCount>> GetTotalCompletedOrders()
         {
-            var completedOrdersResponse = await _client.GetAsync("GetTotalCompletedOrders?timeinterval=fifteenminutes");
+            var completedOrdersResponse = await _client.GetAsync("GetTotalCompletedOrders?elapsedtime=fiveminutes");
 
             if (!completedOrdersResponse.IsSuccessStatusCode)
                 throw new ApplicationException();
@@ -43,7 +43,7 @@ namespace DXStats.Services
 
         public async Task<int> GetTotalTradesCount()
         {
-            var totalTradeCountResponse = await _client.GetAsync("GetTotalTradesCount?timeinterval=fifteenminutes");
+            var totalTradeCountResponse = await _client.GetAsync("GetTotalTradesCount?elapsedtime=fiveminutes");
 
             if (!totalTradeCountResponse.IsSuccessStatusCode)
                 throw new ApplicationException();
@@ -55,7 +55,7 @@ namespace DXStats.Services
 
         public async Task<List<CoinVolume>> GetTotalVolume(string coin, string units)
         {
-            string queryString = "GetTotalVolume?coin=" + coin + "&units=" + units + "&timeinterval=fifteenminutes";
+            string queryString = "GetTotalVolume?coin=" + coin + "&units=" + units + "&elapsedtime=fiveminutes";
 
             var totalVolumeResponse = await _client.GetAsync(queryString);
 
@@ -69,7 +69,7 @@ namespace DXStats.Services
 
         public async Task<List<CoinTradeStatistics>> GetTotalVolumePerCoin(string units)
         {
-            string queryString = "GetTotalVolumePerCoin?units=" + units + "&timeinterval=fifteenminutes";
+            string queryString = "GetTotalVolumePerCoin?units=" + units + "&elapsedtime=fiveminutes";
 
             var totalVolumePerTradedCoinResponse = await _client.GetAsync(queryString);
 
