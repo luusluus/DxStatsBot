@@ -285,7 +285,7 @@ namespace DXStats.Persistence
 
             switch (elapsedTime)
             {
-                case ElapsedTime.Hour:
+                case ElapsedTime.Day:
                     timespan = TimeSpan.FromMinutes(5);
                     break;
                 case ElapsedTime.Week:
