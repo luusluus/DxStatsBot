@@ -43,7 +43,7 @@ items:
           - name: Discord:token
             value: DISCORD_TOKEN 
           - name: Discord:channelId
-            value: DISCORD_CHANNEL_ID
+            value: "DISCORD_CHANNEL_ID"
           ports:
           - containerPort: 8090
             protocol: TCP
