@@ -66,6 +66,7 @@ namespace DXStats
 
             var twitterCredentials = Configuration.GetSection("Twitter").Get<TwitterCredentials>();
 
+            Console.WriteLine("Twitter ConsumerKey: " + twitterCredentials.ConsumerKey);
             Auth.SetUserCredentials(
                 twitterCredentials.ConsumerKey,
                 twitterCredentials.ConsumerSecret,

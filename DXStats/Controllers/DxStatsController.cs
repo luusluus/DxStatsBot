@@ -2,6 +2,7 @@
 using DXStats.Enums;
 using DXStats.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DXStats.Controllers
@@ -64,7 +65,19 @@ namespace DXStats.Controllers
             if (elapsedTime.Equals(ElapsedTime.FiveMinutes) || elapsedTime.Equals(ElapsedTime.FifteenMinutes) || elapsedTime.Equals(ElapsedTime.Hour) || elapsedTime.Equals(ElapsedTime.TwoHours))
                 return BadRequest("Lower boundary is one hour");
 
-            return Ok(_dxDataRepository.GetVolumeAndTradeCountByElapsedTime(elapsedTime));
+            var volumeAndTradeCount = _dxDataRepository.GetVolumeAndTradeCountByElapsedTime(elapsedTime);
+
+            return Ok(volumeAndTradeCount.Select(v => new TotalVolumeAndTradeCountIntervalDto
+            {
+                Timestamp = v.Timestamp,
+                TradeCount = v.TradeCount,
+                Volumes = new Dictionary<string, decimal>
+                {
+                    { nameof(v.BTC), v.BTC  },
+                    { nameof(v.USD), v.USD  },
+                    { nameof(v.BLOCK), v.BLOCK  },
+                }
+            }));
         }
 
         [HttpGet("[action]")]
@@ -78,7 +91,20 @@ namespace DXStats.Controllers
             if (!coins.Contains(coin))
                 return BadRequest("Coin not listed");
 
-            return Ok(_dxDataRepository.GetVolumeAndTradeCountByElapsedTimeAndCoin(elapsedTime, coin));
+            var volumeAndTradeCount = _dxDataRepository.GetVolumeAndTradeCountByElapsedTimeAndCoin(elapsedTime, coin);
+
+            return Ok(volumeAndTradeCount.Select(v => new TotalVolumeAndTradeCountIntervalDto
+            {
+                Timestamp = v.Timestamp,
+                TradeCount = v.TradeCount,
+                Volumes = new Dictionary<string, decimal>
+                {
+                    { nameof(v.BTC), v.BTC  },
+                    { nameof(v.USD), v.USD  },
+                    { nameof(v.BLOCK), v.BLOCK  },
+                    { coin, v.CustomCoin  }
+                }
+            }));
         }
     }
 }

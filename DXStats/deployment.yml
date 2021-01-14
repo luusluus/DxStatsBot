@@ -32,6 +32,18 @@ items:
           env:
           - name: DATABASE_DIR
             value: /usr/db
+          - name: Twitter:consumerKey
+            value: TWITTER_CONSUMER_KEY
+          - name: Twitter:consumerSecret
+            value: TWITTER_CONSUMER_SECRET
+          - name: Twitter:userAccessToken
+            value: TWITTER_USER_ACCESS_TOKEN
+          - name: Twitter:userAccessSecret
+            value: TWITTER_USER_ACCESS_SECRET
+          - name: Discord:token
+            value: DISCORD_TOKEN 
+          - name: Discord:channelId
+            value: DISCORD_CHANNEL_ID
           ports:
           - containerPort: 8090
             protocol: TCP
