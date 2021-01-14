@@ -102,7 +102,7 @@ namespace DXStats.Controllers
                     { nameof(v.BTC), v.BTC  },
                     { nameof(v.USD), v.USD  },
                     { nameof(v.BLOCK), v.BLOCK  },
-                    { coin, v.CustomCoin  }
+                    { coin.ToUpper(), v.CustomCoin  }
                 }
             }));
         }

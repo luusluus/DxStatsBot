@@ -219,7 +219,7 @@ namespace DXStats.Persistence
                 _context.DayVolumes
                 .Include(dv => dv.Snapshot)
                 .Include(dv => dv.Coin)
-                .Where(dv => dv.Coin.Id.Equals(coin) && dv.Snapshot.DateCreated >= past)
+                .Where(dv => dv.Coin.Id.Equals(coin.ToUpper()) && dv.Snapshot.DateCreated >= past)
                 .ToList()
                 .GroupBy(dv => dv.Snapshot.DateCreated.Ticks / timespan.Ticks)
 
