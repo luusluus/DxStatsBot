@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DXStats.Controllers.Dtos
+namespace DXStats.Domain.Dto
 {
-    public class TotalVolumeAndTradeCountIntervalDto
+    public class CoinTradeStatisticsInterval
     {
         public DateTime Timestamp { get; set; }
         public Dictionary<string, decimal> Volumes { get; set; }

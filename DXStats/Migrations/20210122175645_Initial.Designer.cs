@@ -3,14 +3,16 @@ using System;
 using DXStats.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DXStats.Migrations
 {
     [DbContext(typeof(DxStatsDbContext))]
-    partial class DxStatsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210122175645_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

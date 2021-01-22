@@ -1,8 +1,9 @@
-﻿using DXStats.Domain.Dto;
+﻿
+using Blocknet.Lib.Services.Coins.Blocknet.XBridge;
+using DXStats.Domain.Dto;
 using DXStats.Domain.Entity;
 using DXStats.Enums;
 using DXStats.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,272 +12,296 @@ namespace DXStats.Persistence
 {
     public class DxDataRepository : IDxDataRepository
     {
+        static readonly HashSet<string> cryptocompareUnsupportedCoins = new HashSet<string>()
+        {
+            "ABET", "AEX", "AGM", "APR", "AUS", "BAD", "BZX", "CDZC", "CHN", "CIV", "CNMC", "DVT", "FGC", "GEEK", "GMCN", "GXX", "HASH", "HATCH", "JIYOX", "KYDC", "LPC", "MERGE", "MLM", "MNP", "NORT", "NYX", "ODIN", "OHMC", "OPCX", "PHL", "QBIC", "SUB1X", "XN", "REEX"}; // Temporary row. Remove when cryptocompare api is updated
+
+        static readonly HashSet<string> xbridgeNoLongerSupportedCoins = new HashSet<string>() { "OHM", "BWK", "XST", "CCBC", "MPWR", "KNG", "MRX", "TRB" };
+
         private readonly DxStatsDbContext _context;
-        public DxDataRepository(DxStatsDbContext context)
+        private readonly ICoinPriceService _coinPriceService;
+        public DxDataRepository(DxStatsDbContext context, ICoinPriceService coinPriceService)
         {
             _context = context;
+            _coinPriceService = coinPriceService;
+
+            cryptocompareUnsupportedCoins.UnionWith(xbridgeNoLongerSupportedCoins);
         }
 
-        public void AddDailySnapshot(List<CompletedOrderCount> completedOrders, List<CoinTradeStatistics> coinTradeStatistics)
+        public List<Trade> GetTradingData(ElapsedTime elapsedTime)
         {
-            var snapshot = new Snapshot
+            var past = getUnixTimestampFromElapsedTime(elapsedTime);
+
+            return _context.Trades
+                .AsQueryable()
+                .Where(t => t.Timestamp >= past)
+                .ToList();
+        }
+
+        public void AddTradingData(List<GetTradingDataResponse> tradingData)
+        {
+
+            var trades = tradingData.Select(td =>
             {
-                DateCreated = DateTime.Now,
-
-            };
-
-            var coins = _context.Coins.ToList();
-
-
-            var dayCompletedOrders = new List<DayCompletedOrders>();
-
-            completedOrders.ForEach(co =>
-            {
-                var coin = coins.FirstOrDefault(c => c.Id.Equals(co.Coin));
-
-                dayCompletedOrders.Add(new DayCompletedOrders
+                decimal priceBLOCK = 0;
+                decimal priceBTC = 0;
+                decimal priceUSD = 0;
+                if (!cryptocompareUnsupportedCoins.Contains(td.Maker))
                 {
-                    Coin = coin,
-                    Snapshot = snapshot,
-                    Count = co.Count
-                });
-            });
-
-
-            snapshot.DayCompletedOrders = dayCompletedOrders;
-
-            var dayVolumes = new List<DayVolume>();
-
-            coinTradeStatistics.ForEach(cs =>
-            {
-                if (cs.TradeCount > 0)
-                {
-                    var coin = coins.FirstOrDefault(c => c.Id.Equals(cs.Coin));
-
-                    dayVolumes.Add(new DayVolume
-                    {
-                        Coin = coin,
-                        Snapshot = snapshot,
-                        NumberOfTrades = cs.TradeCount,
-                        BLOCK = cs.Volumes.FirstOrDefault(v => v.Unit.Equals("BLOCK")).Volume,
-                        BTC = cs.Volumes.FirstOrDefault(v => v.Unit.Equals("BTC")).Volume,
-                        USD = cs.Volumes.FirstOrDefault(v => v.Unit.Equals("USD")).Volume,
-                        CustomCoin = cs.Volumes.FirstOrDefault(v => v.Unit.Equals(coin.Id)).Volume
-                    });
+                    var coinPrices = _coinPriceService.GetCoinPrice(new List<string> { td.Maker.ToUpper() }, new List<string> { "BLOCK", "USD", "BTC" });
+                    priceBLOCK = coinPrices[td.Maker]["BLOCK"];
+                    priceBTC = coinPrices[td.Maker]["BTC"];
+                    priceUSD = coinPrices[td.Maker]["USD"];
                 }
 
+                return new Trade
+                {
+                    TradeId = td.Id,
+                    Timestamp = td.Timestamp,
+                    FeeTxId = td.FeeTxId,
+                    MakerId = td.Maker,
+                    MakerSize = td.MakerSize,
+                    NodePubKey = td.NodePubKey,
+                    TakerId = td.Taker,
+                    TakerSize = td.TakerSize,
+                    PriceBLOCK = priceBLOCK,
+                    PriceBTC = priceBTC,
+                    PriceUSD = priceUSD
+                };
             });
 
-            snapshot.DayVolumes = dayVolumes;
 
-            _context.Add(snapshot);
+            _context.Trades.AddRange(trades);
         }
 
-        public void AddCoin(Coin coin)
+        public void AddCoinStatistics(List<GetTradingDataResponse> tradingData)
         {
-            _context.Coins.Add(coin);
-        }
-
-        public void RemoveCoin(string coin)
-        {
-            var existingCoin = _context.Coins.FirstOrDefault(c => c.Id.Equals(coin));
-
-            if (existingCoin != null)
-            {
-                _context.Remove(existingCoin);
-            }
-
-        }
-
-        public List<Coin> GetCoins()
-        {
-            return _context.Coins.ToList();
-        }
-
-        public DayVolume GetTotalVolumeAndTradesByElapsedTime(ElapsedTime elapsedTime)
-        {
-            var past = getDateTimeFromElapsedTime(elapsedTime);
-
-            var dayVolumes = _context.DayVolumes
-                .Include(dv => dv.Snapshot)
-                .Where(dv => dv.Snapshot.DateCreated >= past)
+            var coinStats = tradingData
+                .GroupBy(t => t.Maker)
+                .Select(g =>
+                {
+                    decimal priceBLOCK = 0;
+                    decimal priceBTC = 0;
+                    decimal priceUSD = 0;
+                    if (!cryptocompareUnsupportedCoins.Contains(g.Key))
+                    {
+                        var coinPrices = _coinPriceService.GetCoinPrice(new List<string> { g.Key.ToUpper() }, new List<string> { "BLOCK", "USD", "BTC" });
+                        priceBLOCK = coinPrices[g.Key]["BLOCK"];
+                        priceBTC = coinPrices[g.Key]["BTC"];
+                        priceUSD = coinPrices[g.Key]["USD"];
+                    }
+                    return new Coin
+                    {
+                        Id = g.Key,
+                        NumberOfTrades = g.Count(t => t.Maker.Equals(g.Key)),
+                        Volume = g.Sum(t => t.MakerSize),
+                        VolumeBLOCK = g.Sum(t => t.MakerSize * priceBLOCK),
+                        VolumeUSD = g.Sum(t => t.MakerSize * priceUSD),
+                        VolumeBTC = g.Sum(t => t.MakerSize * priceBTC)
+                    };
+                })
                 .ToList();
 
-            return new DayVolume
+            Coin coin;
+            coinStats.ForEach(c =>
             {
-                USD = dayVolumes.Sum(dv => dv.USD),
-                BTC = dayVolumes.Sum(dv => dv.BTC),
-                BLOCK = dayVolumes.Sum(dv => dv.BLOCK),
-                NumberOfTrades = dayVolumes.Sum(dv => dv.NumberOfTrades)
+                coin = _context.Coins.FirstOrDefault(db => db.Id.Equals(c.Id));
+                coin.NumberOfTrades += c.NumberOfTrades;
+                coin.Volume += c.Volume;
+                coin.VolumeUSD += c.VolumeUSD;
+                coin.VolumeBTC += c.VolumeBTC;
+                coin.VolumeBLOCK += c.VolumeBLOCK;
+            });
+        }
+
+        public CoinTradeStatistics GetTotalVolumeAndTradesByElapsedTime(ElapsedTime elapsedTime)
+        {
+            if (elapsedTime.Equals(ElapsedTime.All))
+            {
+                var coins = _context.Coins
+                    .AsEnumerable()
+                    .ToList();
+
+                return new CoinTradeStatistics
+                {
+                    NumberOfTrades = coins.Sum(c => c.NumberOfTrades),
+                    Volumes = new Dictionary<string, decimal>
+                    {
+                        { "USD",  coins.Sum(c => c.VolumeUSD) },
+                        { "BTC",  coins.Sum(c => c.VolumeBTC) },
+                        { "BLOCK",  coins.Sum(c => c.VolumeBLOCK) }
+                    }
+                };
+            }
+
+            var past = getUnixTimestampFromElapsedTime(elapsedTime);
+
+            var trades = _context.Trades
+                .AsEnumerable()
+                .Where(t => t.Timestamp >= past)
+                .ToList();
+
+            return new CoinTradeStatistics
+            {
+                NumberOfTrades = trades.Count(),
+                Volumes = new Dictionary<string, decimal>
+                {
+                    { "USD",  trades.Sum(t => t.MakerSize * t.PriceBLOCK) },
+                    { "BTC",  trades.Sum(t => t.MakerSize * t.PriceBTC) },
+                    { "BLOCK",  trades.Sum(t => t.MakerSize * t.PriceUSD) }
+                }
             };
         }
 
         public Dictionary<string, int> GetTotalCompletedOrdersByElapsedTime(ElapsedTime elapsedTime)
         {
-            var past = getDateTimeFromElapsedTime(elapsedTime);
+            var past = getUnixTimestampFromElapsedTime(elapsedTime);
 
-            var dco = _context.DayCompletedOrders
-                .Include(co => co.Snapshot)
-                .Include(co => co.Coin)
-                .Where(s => s.Snapshot.DateCreated >= past)
-                .ToList()
-                .GroupBy(dv => dv.Coin.Id)
+            return _context.Trades
+                .AsEnumerable()
+                .Where(t => t.Timestamp >= past)
+                .SelectMany(t => new string[] { t.TakerId, t.MakerId })
+                .GroupBy(g => g)
                 .Select(g => new
                 {
                     g.Key,
-                    SumExecutedOrders = g.Sum(dv => dv.Count)
+                    TotalCompletedOrders = g.Count()
                 })
-                .ToDictionary(g => g.Key, g => g.SumExecutedOrders);
-
-            var coins = GetCoins();
-
-            var nonZeroVolumeCoins = new List<string>(dco.Keys);
-
-            var zeroVolumeCoins = coins.Select(c => c.Id).Except(nonZeroVolumeCoins).ToList();
-
-            zeroVolumeCoins.ForEach(zvc => dco.Add(zvc, 0));
-
-            return dco;
+                .ToDictionary(g => g.Key, g => g.TotalCompletedOrders);
         }
 
-        public Dictionary<string, DayVolume> GetTotalVolumeAndTradesByCoinAndElapsedTime(ElapsedTime elapsedTime)
+        public Dictionary<string, CoinTradeStatistics> GetTotalVolumeAndTradesByCoinAndElapsedTime(ElapsedTime elapsedTime)
         {
-            var past = getDateTimeFromElapsedTime(elapsedTime);
+            var past = getUnixTimestampFromElapsedTime(elapsedTime);
 
-            var dv = _context.DayVolumes
-                 .Include(dv => dv.Snapshot)
-                 .Include(dv => dv.Coin)
-                 .Where(dv => dv.Snapshot.DateCreated >= past)
-                 .ToList()
-                 .GroupBy(dv => dv.Coin.Id)
-                 .Select(g => new
-                 {
-                     g.Key,
-                     SumBLOCK = g.Sum(dv => dv.BLOCK),
-                     SumBTC = g.Sum(dv => dv.BTC),
-                     SumUSD = g.Sum(dv => dv.USD),
-                     SumCustomCoin = g.Sum(dv => dv.CustomCoin),
-                     SumNumberOfTrades = g.Sum(dv => dv.NumberOfTrades)
-                 })
-                 .ToDictionary(g => g.Key, g => new DayVolume
-                 {
-                     BLOCK = g.SumBLOCK,
-                     BTC = g.SumBTC,
-                     USD = g.SumUSD,
-                     CustomCoin = g.SumCustomCoin,
-                     NumberOfTrades = g.SumNumberOfTrades
-                 });
-
-            var coins = GetCoins();
-
-            var nonZeroVolumeCoins = new List<string>(dv.Keys);
-
-            var zeroVolumeCoins = coins.Select(c => c.Id).Except(nonZeroVolumeCoins).ToList();
-
-            zeroVolumeCoins.ForEach(zvc => dv.Add(zvc, new DayVolume
-            {
-                BLOCK = 0,
-                BTC = 0,
-                USD = 0,
-                NumberOfTrades = 0
-            }));
-
-            return dv;
-        }
-
-        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByElapsedTime(ElapsedTime elapsedTime)
-        {
-            var timespan = getTimeSpanFromElapsedTime(elapsedTime);
-
-            var past = getDateTimeFromElapsedTime(elapsedTime);
-
-            return
-                _context.DayVolumes
-                .Include(dv => dv.Snapshot)
-                .Include(dv => dv.Coin)
-                .Where(dv => dv.Snapshot.DateCreated >= past)
-                .ToList()
-                .GroupBy(dv => dv.Snapshot.DateCreated.Ticks / timespan.Ticks)
-                .Select(g => new TotalVolumeAndTradeCountInterval
+            return _context.Trades
+                .AsEnumerable()
+                .Where(t => t.Timestamp >= past)
+                .GroupBy(t => t.MakerId)
+                .Select(g => new
                 {
-                    Timestamp = g.Last().Snapshot.DateCreated,
-                    USD = g.Sum(dv => dv.USD),
-                    BLOCK = g.Sum(dv => dv.BLOCK),
-                    BTC = g.Sum(dv => dv.BTC),
-                    CustomCoin = g.Sum(dv => dv.CustomCoin),
-                    TradeCount = g.Sum(dv => dv.NumberOfTrades)
+                    g.Key,
+                    VolumeSum = g.Sum(t => t.MakerSize),
+                    VolumeSumUSD = g.Sum(t => t.MakerSize * t.PriceUSD),
+                    VolumeSumBLOCK = g.Sum(t => t.MakerSize * t.PriceBLOCK),
+                    VolumeSumBTC = g.Sum(t => t.MakerSize * t.PriceBTC),
+                    NumberOfTrades = g.Count(t => t.MakerId.Equals(g.Key))
                 })
-                .ToList();
-        }
-
-        public List<TotalVolumeAndTradeCountInterval> GetVolumeAndTradeCountByElapsedTimeAndCoin(ElapsedTime elapsedTime, string coin)
-        {
-            var timespan = getTimeSpanFromElapsedTime(elapsedTime);
-
-            var past = getDateTimeFromElapsedTime(elapsedTime);
-
-            return
-                _context.DayVolumes
-                .Include(dv => dv.Snapshot)
-                .Include(dv => dv.Coin)
-                .Where(dv => dv.Coin.Id.Equals(coin.ToUpper()) && dv.Snapshot.DateCreated >= past)
-                .ToList()
-                .GroupBy(dv => dv.Snapshot.DateCreated.Ticks / timespan.Ticks)
-
-                .Select(g => new TotalVolumeAndTradeCountInterval
+                .ToDictionary(g => g.Key, g =>
                 {
-                    Timestamp = g.Last().Snapshot.DateCreated,
-                    USD = g.Sum(dv => dv.USD),
-                    BLOCK = g.Sum(dv => dv.BLOCK),
-                    BTC = g.Sum(dv => dv.BTC),
-                    CustomCoin = g.Sum(dv => dv.CustomCoin),
-                    TradeCount = g.Sum(dv => dv.NumberOfTrades)
-                })
-                .ToList();
+                    var volumes = new Dictionary<string, decimal>
+                    {
+                        { "USD",  g.VolumeSumUSD },
+                        { "BTC",  g.VolumeSumBTC },
+                        { "BLOCK",  g.VolumeSumBLOCK }
+                    };
+
+                    if (!g.Key.Equals("BLOCK") && !g.Key.Equals("USD"))
+                        volumes.Add(g.Key, g.VolumeSum);
+
+                    return new CoinTradeStatistics
+                    {
+                        NumberOfTrades = g.NumberOfTrades,
+                        Volumes = volumes
+                    };
+                });
         }
 
-        private DateTime getDateTimeFromElapsedTime(ElapsedTime elapsedTime)
+        public List<CoinTradeStatisticsInterval> GetVolumeAndTradeCountByElapsedTime(ElapsedTime elapsedTime)
         {
-            DateTime dateTime;
+            throw new NotImplementedException();
+            //    var timespan = getTimeSpanFromElapsedTime(elapsedTime);
+
+            //    var past = getDateTimeFromElapsedTime(elapsedTime);
+
+            //    return
+            //        _context.DayVolumes
+            //        .Include(dv => dv.Snapshot)
+            //        .Include(dv => dv.Coin)
+            //        .Where(dv => dv.Snapshot.DateCreated >= past)
+            //        .ToList()
+            //        .GroupBy(dv => dv.Snapshot.DateCreated.Ticks / timespan.Ticks)
+            //        .Select(g => new TotalVolumeAndTradeCountInterval
+            //        {
+            //            Timestamp = g.Last().Snapshot.DateCreated,
+            //            USD = g.Sum(dv => dv.USD),
+            //            BLOCK = g.Sum(dv => dv.BLOCK),
+            //            BTC = g.Sum(dv => dv.BTC),
+            //            CustomCoin = g.Sum(dv => dv.CustomCoin),
+            //            TradeCount = g.Sum(dv => dv.NumberOfTrades)
+            //        })
+            //        .ToList();
+        }
+
+        public List<CoinTradeStatisticsInterval> GetVolumeAndTradeCountByElapsedTimeAndCoin(ElapsedTime elapsedTime, string coin)
+        {
+            throw new NotImplementedException();
+            //    var timespan = getTimeSpanFromElapsedTime(elapsedTime);
+
+            //    var past = getDateTimeFromElapsedTime(elapsedTime);
+
+            //    return
+            //        _context.DayVolumes
+            //        .Include(dv => dv.Snapshot)
+            //        .Include(dv => dv.Coin)
+            //        .Where(dv => dv.Coin.Id.Equals(coin.ToUpper()) && dv.Snapshot.DateCreated >= past)
+            //        .ToList()
+            //        .GroupBy(dv => dv.Snapshot.DateCreated.Ticks / timespan.Ticks)
+
+            //        .Select(g => new TotalVolumeAndTradeCountInterval
+            //        {
+            //            Timestamp = g.Last().Snapshot.DateCreated,
+            //            USD = g.Sum(dv => dv.USD),
+            //            BLOCK = g.Sum(dv => dv.BLOCK),
+            //            BTC = g.Sum(dv => dv.BTC),
+            //            CustomCoin = g.Sum(dv => dv.CustomCoin),
+            //            TradeCount = g.Sum(dv => dv.NumberOfTrades)
+            //        })
+            //        .ToList();
+        }
+
+        private long getUnixTimestampFromElapsedTime(ElapsedTime elapsedTime)
+        {
+            long timestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
 
             switch (elapsedTime)
             {
                 case ElapsedTime.FiveMinutes:
-                    dateTime = DateTime.Now.AddMinutes(-5);
+                    timestamp -= (5 * 60);
                     break;
                 case ElapsedTime.FifteenMinutes:
-                    dateTime = DateTime.Now.AddMinutes(-15);
+                    timestamp -= (15 * 60);
                     break;
                 case ElapsedTime.Hour:
-                    dateTime = DateTime.Now.AddHours(-1);
+                    timestamp -= (60 * 60);
                     break;
                 case ElapsedTime.TwoHours:
-                    dateTime = DateTime.Now.AddHours(-2);
+                    timestamp -= (2 * 60 * 60);
                     break;
                 case ElapsedTime.Day:
-                    dateTime = DateTime.Now.AddDays(-1);
+                    timestamp -= (24 * 60 * 60);
                     break;
                 case ElapsedTime.Week:
-                    dateTime = DateTime.Now.AddDays(-7);
+                    timestamp -= (7 * 24 * 60 * 60);
                     break;
                 case ElapsedTime.Month:
-                    dateTime = DateTime.Now.AddDays(-31);
+                    timestamp -= (31 * 24 * 60 * 60);
                     break;
                 case ElapsedTime.ThreeMonths:
-                    dateTime = DateTime.Now.AddDays(-93);
+                    timestamp -= (3 * 31 * 24 * 60 * 60);
                     break;
                 case ElapsedTime.Year:
-                    dateTime = DateTime.Now.AddDays(-365);
+                    timestamp -= (12 * 31 * 24 * 60 * 60);
                     break;
                 case ElapsedTime.All:
-                    dateTime = DateTime.MinValue;
+                    timestamp = DateTimeOffset.MinValue.ToUnixTimeSeconds();
                     break;
 
                 default:
-                    dateTime = DateTime.MinValue;
+                    timestamp = DateTimeOffset.MinValue.ToUnixTimeSeconds();
                     break;
             }
-            return dateTime;
+            return timestamp;
         }
 
         private TimeSpan getTimeSpanFromElapsedTime(ElapsedTime elapsedTime)

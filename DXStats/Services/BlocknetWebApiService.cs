@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace DXStats.Services
 {
-    public class BlocknetApiService : IBlocknetApiService
+    public class BlocknetWebApiService : IBlocknetApiService
     {
         private readonly HttpClient _client;
 
-        public BlocknetApiService(HttpClient client)
+        public BlocknetWebApiService(HttpClient client)
         {
             _client = client;
         }

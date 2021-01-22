@@ -1,4 +1,5 @@
-﻿using DXStats.Domain.Dto;
+﻿using Blocknet.Lib.Services.Coins.Blocknet.XBridge;
+using DXStats.Domain.Dto;
 using DXStats.Interfaces;
 using Newtonsoft.Json;
 using System;
@@ -29,56 +30,18 @@ namespace DXStats.Services
             return JsonConvert.DeserializeObject<List<OpenOrdersPerMarket>>(openOrdersPerMarketResult);
         }
 
-        public async Task<List<CompletedOrderCount>> GetTotalCompletedOrders()
+        public async Task<List<GetTradingDataResponse>> GetTradingData(int blocks)
         {
-            var completedOrdersResponse = await _client.GetAsync("GetTotalCompletedOrders?elapsedtime=fiveminutes");
+            string queryString = "GetTradingData?blocks=" + blocks;
 
-            if (!completedOrdersResponse.IsSuccessStatusCode)
+            var tradingDataResponse = await _client.GetAsync(queryString);
+
+            if (!tradingDataResponse.IsSuccessStatusCode)
                 throw new ApplicationException();
 
-            string completedOrdersResponseResult = await completedOrdersResponse.Content.ReadAsStringAsync();
+            string tradingDataResult = await tradingDataResponse.Content.ReadAsStringAsync();
 
-            return JsonConvert.DeserializeObject<List<CompletedOrderCount>>(completedOrdersResponseResult);
-        }
-
-        public async Task<int> GetTotalTradesCount()
-        {
-            var totalTradeCountResponse = await _client.GetAsync("GetTotalTradesCount?elapsedtime=fiveminutes");
-
-            if (!totalTradeCountResponse.IsSuccessStatusCode)
-                throw new ApplicationException();
-
-            string totalTradeCountResult = await totalTradeCountResponse.Content.ReadAsStringAsync();
-
-            return JsonConvert.DeserializeObject<int>(totalTradeCountResult);
-        }
-
-        public async Task<List<CoinVolume>> GetTotalVolume(string coin, string units)
-        {
-            string queryString = "GetTotalVolume?coin=" + coin + "&units=" + units + "&elapsedtime=fiveminutes";
-
-            var totalVolumeResponse = await _client.GetAsync(queryString);
-
-            if (!totalVolumeResponse.IsSuccessStatusCode)
-                throw new ApplicationException();
-
-            string totalVolumeResult = await totalVolumeResponse.Content.ReadAsStringAsync();
-
-            return JsonConvert.DeserializeObject<List<CoinVolume>>(totalVolumeResult);
-        }
-
-        public async Task<List<CoinTradeStatistics>> GetTotalVolumePerCoin(string units)
-        {
-            string queryString = "GetTotalVolumePerCoin?units=" + units + "&elapsedtime=fiveminutes";
-
-            var totalVolumePerTradedCoinResponse = await _client.GetAsync(queryString);
-
-            if (!totalVolumePerTradedCoinResponse.IsSuccessStatusCode)
-                throw new ApplicationException();
-
-            string totalVolumePerTradedCoinResult = await totalVolumePerTradedCoinResponse.Content.ReadAsStringAsync();
-
-            return JsonConvert.DeserializeObject<List<CoinTradeStatistics>>(totalVolumePerTradedCoinResult);
+            return JsonConvert.DeserializeObject<List<GetTradingDataResponse>>(tradingDataResult);
         }
     }
 }

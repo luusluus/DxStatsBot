@@ -4,8 +4,8 @@ namespace DXStats.Domain.Dto
 {
     public class CoinTradeStatistics
     {
-        public string Coin { get; set; }
-        public List<CoinVolume> Volumes { get; set; }
-        public int TradeCount { get; set; }
+        public int NumberOfTrades { get; set; }
+        public Dictionary<string, decimal> Volumes { get; set; }
+
     }
 }

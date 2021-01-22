@@ -2,12 +2,15 @@ using Discord;
 using Discord.WebSocket;
 using DxStats.Services;
 using DXStats.Configuration;
+using DXStats.Domain;
+using DXStats.Domain.Overrides;
 using DXStats.Interfaces;
 using DXStats.Persistence;
 using DXStats.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,9 +33,16 @@ namespace DXStats
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var apiEndpoints = new ApiEndpoints();
+            Configuration.GetSection("ApiEndpoints").Bind(apiEndpoints);
+
+            services.Configure<DiscordCredentials>(options =>
+                Configuration.GetSection("Discord").Bind(options));
+
             services.AddControllers()
                 .AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
 
             services.AddScoped<IDxDataRepository, DxDataRepository>();
 
@@ -40,17 +50,19 @@ namespace DXStats
 
             // Override env variable DATABASE_DIR to specify directory
             services.AddDbContext<DxStatsDbContext>(opt =>
-                opt.UseSqlite($"Data Source={Configuration["DATABASE_DIR"]}/dxstats.db"));
+                opt
+                .UseSqlite($"Data Source={Configuration["DATABASE_DIR"]}/dxstats.db")
+                .ReplaceService<IMigrationsAssembly, SeederAwareMigrationsAssembly>()
+                );
 
-            var apiEndpoints = new ApiEndpoints();
-            Configuration.GetSection("ApiEndpoints").Bind(apiEndpoints);
 
-            services.Configure<DiscordCredentials>(options =>
-                Configuration.GetSection("Discord").Bind(options));
+            services.AddTransient<ISeeder, Seeder>();
 
-            services.AddHttpClient<IBlocknetApiService, BlocknetApiService>(client =>
+
+
+            services.AddHttpClient<IBlocknetApiService, BlocknetWebApiService>(client =>
             {
-                client.BaseAddress = new Uri(apiEndpoints.Blocknet);
+                client.BaseAddress = new Uri(apiEndpoints.BlocknetWeb);
                 client.DefaultRequestHeaders
                     .Accept
                     .Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -58,7 +70,15 @@ namespace DXStats
 
             services.AddHttpClient<IDxDataService, DxDataService>(client =>
             {
-                client.BaseAddress = new Uri(apiEndpoints.Native);
+                client.BaseAddress = new Uri(apiEndpoints.BlockDX);
+                client.DefaultRequestHeaders
+                    .Accept
+                    .Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            });
+
+            services.AddHttpClient<ICoinPriceService, CoinPriceService>(client =>
+            {
+                client.BaseAddress = new Uri(apiEndpoints.CloudChainsPricing);
                 client.DefaultRequestHeaders
                     .Accept
                     .Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -66,13 +86,13 @@ namespace DXStats
 
             var twitterCredentials = Configuration.GetSection("Twitter").Get<TwitterCredentials>();
 
-            Console.WriteLine("Twitter ConsumerKey: " + twitterCredentials.ConsumerKey);
             Auth.SetUserCredentials(
                 twitterCredentials.ConsumerKey,
                 twitterCredentials.ConsumerSecret,
                 twitterCredentials.UserAccessToken,
                 twitterCredentials.UserAccessSecret
             );
+            services.AddScoped<IComposeTweetService, ComposeTweetService>();
 
             services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
             {
@@ -82,7 +102,7 @@ namespace DXStats
 
             services.AddSingleton<DiscordStartupService>();
 
-            services.AddScoped<IComposeTweetService, ComposeTweetService>();
+            services.AddScoped<IPublishService, PublishService>();
 
             services.AddCors(corsOptions =>
             {
@@ -97,6 +117,8 @@ namespace DXStats
 
 
             services.AddHostedService<TimedHostedService>();
+
+            ServiceLocator.SetLocatorProvider(services.BuildServiceProvider());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -107,7 +129,7 @@ namespace DXStats
                 app.UseDeveloperExceptionPage();
             }
 
-            IServiceScopeFactory _scopeFactory = app.ApplicationServices.GetService(typeof(IServiceScopeFactory)) as IServiceScopeFactory;
+            //IServiceScopeFactory _scopeFactory = app.ApplicationServices.GetService(typeof(IServiceScopeFactory)) as IServiceScopeFactory;
 
             Task.Run(() => app.ApplicationServices.GetRequiredService<DiscordStartupService>().StartAsync());
 

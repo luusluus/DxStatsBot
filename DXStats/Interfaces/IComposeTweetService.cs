@@ -7,9 +7,9 @@ namespace DXStats.Interfaces
     public interface IComposeTweetService
     {
         Task<List<string>> ComposeOrdersAndActiveMarkets();
-        Task<string> ComposeCompletedOrderTweet(ElapsedTime elapsedTime);
-        Task<List<string>> ComposeVolumePerCoinTweets(ElapsedTime elapsedTime);
-        Task<string> ComposeTotalVolumeTweet(ElapsedTime elapsedTime);
+        string ComposeCompletedOrderTweet(ElapsedTime elapsedTime);
+        List<string> ComposeVolumePerCoinTweets(ElapsedTime elapsedTime);
+        string ComposeTotalVolumeTweet(ElapsedTime elapsedTime);
         string ComposeMoreDetailsTweet();
     }
 }

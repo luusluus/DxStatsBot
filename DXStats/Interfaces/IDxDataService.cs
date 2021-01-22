@@ -1,3 +1,4 @@
+using Blocknet.Lib.Services.Coins.Blocknet.XBridge;
 using DXStats.Domain.Dto;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -6,13 +7,7 @@ namespace DXStats.Interfaces
 {
     public interface IDxDataService
     {
-        Task<List<CompletedOrderCount>> GetTotalCompletedOrders();
-
-        Task<List<CoinTradeStatistics>> GetTotalVolumePerCoin(string units);
-
-        Task<List<CoinVolume>> GetTotalVolume(string coin, string units);
-
-        Task<int> GetTotalTradesCount();
+        Task<List<GetTradingDataResponse>> GetTradingData(int blocks);
 
         Task<List<OpenOrdersPerMarket>> GetOpenOrdersPerMarket();
     }

@@ -73,7 +73,7 @@ namespace DXStats.Services
             return tweets;
         }
 
-        public async Task<string> ComposeCompletedOrderTweet(ElapsedTime timeInterval)
+        public string ComposeCompletedOrderTweet(ElapsedTime timeInterval)
         {
             var total = _dxDataRepository.GetTotalCompletedOrdersByElapsedTime(timeInterval);
 
@@ -87,7 +87,7 @@ namespace DXStats.Services
             return tweet;
         }
 
-        public async Task<List<string>> ComposeVolumePerCoinTweets(ElapsedTime timeInterval)
+        public List<string> ComposeVolumePerCoinTweets(ElapsedTime timeInterval)
         {
             var total = _dxDataRepository.GetTotalVolumeAndTradesByCoinAndElapsedTime(timeInterval);
 
@@ -99,13 +99,13 @@ namespace DXStats.Services
                 {
                     string tweet = "Trading Volume $" + coin + ":\n\n";
 
-                    tweet += "$USD: $" + totalCoin.USD.ToString("N2", CultureInfo.InvariantCulture) + "\n";
-                    tweet += "$BTC: " + totalCoin.BTC.ToString("N3", CultureInfo.InvariantCulture) + " BTC\n";
-                    tweet += "$BLOCK: " + totalCoin.BLOCK.ToString("N3", CultureInfo.InvariantCulture) + " BLOCK\n";
+                    tweet += "$USD: $" + totalCoin.Volumes["USD"].ToString("N2", CultureInfo.InvariantCulture) + "\n";
+                    tweet += "$BTC: " + totalCoin.Volumes["BTC"].ToString("N3", CultureInfo.InvariantCulture) + " BTC\n";
+                    tweet += "$BLOCK: " + totalCoin.Volumes["BLOCK"].ToString("N3", CultureInfo.InvariantCulture) + " BLOCK\n";
 
                     if (!units.Contains(coin))
                     {
-                        tweet += "$" + coin + ": " + totalCoin.CustomCoin.ToString("N3", CultureInfo.InvariantCulture) + " " + coin + "\n";
+                        tweet += "$" + coin + ": " + totalCoin.Volumes[coin].ToString("N3", CultureInfo.InvariantCulture) + " " + coin + "\n";
                     }
 
                     tweet += "\n\nNumber of Trades: " + totalCoin.NumberOfTrades;
@@ -115,7 +115,7 @@ namespace DXStats.Services
             }
             return childrenTweets;
         }
-        public async Task<string> ComposeTotalVolumeTweet(ElapsedTime timeInterval)
+        public string ComposeTotalVolumeTweet(ElapsedTime timeInterval)
         {
             var total = _dxDataRepository.GetTotalVolumeAndTradesByElapsedTime(timeInterval);
 
@@ -128,9 +128,9 @@ namespace DXStats.Services
                 throw new Exception("No 1 week volume on the BlockDX.");
             }
 
-            tweet += "$USD: $" + total.USD.ToString("N2", CultureInfo.InvariantCulture) + "\n";
-            tweet += "$BTC: " + total.BTC.ToString("N3", CultureInfo.InvariantCulture) + " BTC\n";
-            tweet += "$BLOCK: " + total.BLOCK.ToString("N3", CultureInfo.InvariantCulture) + " BLOCK\n";
+            tweet += "$USD: $" + total.Volumes["USD"].ToString("N2", CultureInfo.InvariantCulture) + "\n";
+            tweet += "$BTC: " + total.Volumes["BTC"].ToString("N3", CultureInfo.InvariantCulture) + " BTC\n";
+            tweet += "$BLOCK: " + total.Volumes["BLOCK"].ToString("N3", CultureInfo.InvariantCulture) + " BLOCK\n";
 
             tweet += "\nNumber of Trades: " + total.NumberOfTrades;
 

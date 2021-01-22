@@ -20,6 +20,7 @@ namespace DXStats.Extensions
                 catch (Exception ex)
                 {
                     Console.WriteLine("Database Creation/Migrations failed!");
+                    Console.WriteLine(ex.Message);
                     Console.WriteLine(ex.StackTrace);
                 }
             }

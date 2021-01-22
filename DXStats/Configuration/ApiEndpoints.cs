@@ -2,7 +2,8 @@
 {
     public class ApiEndpoints
     {
-        public string Native { get; set; }
-        public string Blocknet { get; set; }
+        public string BlockDX { get; set; }
+        public string BlocknetWeb { get; set; }
+        public string CloudChainsPricing { get; set; }
     }
 }

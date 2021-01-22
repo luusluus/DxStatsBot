@@ -1,28 +1,16 @@
-using Discord;
-using Discord.WebSocket;
-using DXStats.Configuration;
-using DXStats.Enums;
 using DXStats.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
-using Tweetinvi;
 
 namespace DXStats.Services
 {
     public class TimedHostedService : IHostedService, IDisposable
     {
-        static readonly List<string> units = new List<string>()
-            {
-                "BLOCK",
-                "BTC",
-                "USD"
-            };
+        private readonly IServiceScopeFactory _scopeFactory;
 
         const double interval = 1000 * 60 * 5; // 5 minutes
 
@@ -30,39 +18,36 @@ namespace DXStats.Services
 
         private System.Timers.Timer _timer;
 
-        private readonly IServiceScopeFactory _scopeFactory;
-
-        private readonly DiscordSocketClient _discordSocketClient;
-        IOptions<DiscordCredentials> _discordCredentials;
-
-        public TimedHostedService(
-            IServiceScopeFactory scopeFactory,
-            DiscordSocketClient discord,
-            IOptions<DiscordCredentials> discordCredentials
-            )
+        public TimedHostedService(IServiceScopeFactory scopeFactory)
         {
             _scopeFactory = scopeFactory;
-            _discordSocketClient = discord;
-            _discordCredentials = discordCredentials;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
             Console.WriteLine("Dx Bot Service running.");
 
+            //using (var scope = _scopeFactory.CreateScope())
+            //{
+            //    var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
+
+            //    _publishService.Publish();
+            //}
+
+            counter = 0;
 
             _timer = new System.Timers.Timer(interval);
-            _timer.Elapsed += new ElapsedEventHandler(CreateSnapshot);
+            _timer.Elapsed += new ElapsedEventHandler(GetTradingData);
             _timer.Enabled = true;
 
             return Task.CompletedTask;
         }
 
-
-
-        private async void CreateSnapshot(object sender, ElapsedEventArgs e)
+        private async void GetTradingData(object sender, ElapsedEventArgs e)
         {
             Console.WriteLine("Snapshot");
+
+            Console.WriteLine("Block delta: " + counter);
 
             using (var scope = _scopeFactory.CreateScope())
             {
@@ -70,10 +55,13 @@ namespace DXStats.Services
                 var _dxDataService = scope.ServiceProvider.GetRequiredService<IDxDataService>();
                 var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-                _dxDataRepository.AddDailySnapshot(
-                    await _dxDataService.GetTotalCompletedOrders(),
-                    await _dxDataService.GetTotalVolumePerCoin(string.Join(",", units))
-                );
+                // 1 block per minute. 5 blocks
+
+                var tradingData = await _dxDataService.GetTradingData(5);
+                _dxDataRepository.AddTradingData(tradingData);
+
+
+                _dxDataRepository.AddCoinStatistics(tradingData);
 
                 _unitOfWork.Complete();
             }
@@ -82,72 +70,14 @@ namespace DXStats.Services
 
             if (counter == 2016) // 1440 blocks/minutes in a day. 7 days: 1440*7. (1440*7)/5 = 2016 * 5 minutes
             {
-                await Publish();
-                counter = 0;
-            }
-        }
-        private async Task Publish()
-        {
-            Console.WriteLine("Publish");
-            try
-            {
+
                 using (var scope = _scopeFactory.CreateScope())
                 {
-                    var composeTweetService = scope.ServiceProvider.GetRequiredService<IComposeTweetService>();
+                    var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
 
-                    var mainTweet = await composeTweetService.ComposeTotalVolumeTweet(ElapsedTime.Week);
-                    if (!string.IsNullOrEmpty(mainTweet))
-                    {
-                        Console.WriteLine(mainTweet);
-                        var childrenTweets = await composeTweetService.ComposeVolumePerCoinTweets(ElapsedTime.Week);
-
-                        childrenTweets.ForEach(ct => Console.WriteLine(ct));
-
-                        var completedOrdersTweet = await composeTweetService.ComposeCompletedOrderTweet(ElapsedTime.Week);
-
-                        Console.WriteLine(completedOrdersTweet);
-
-                        var openOrdersTweets = await composeTweetService.ComposeOrdersAndActiveMarkets();
-
-                        openOrdersTweets.ForEach(ct => Console.WriteLine(ct));
-
-                        var detailsTweet = composeTweetService.ComposeMoreDetailsTweet();
-
-                        Console.WriteLine(detailsTweet);
-
-                        var parentTweet = Tweet.PublishTweet(mainTweet);
-
-                        Tweetinvi.Models.ITweet prevTweet = parentTweet;
-                        Tweetinvi.Models.ITweet currTweet;
-                        foreach (var childTweet in childrenTweets)
-                        {
-                            currTweet = Tweet.PublishTweetInReplyTo(childTweet, prevTweet);
-                            prevTweet = currTweet;
-                        };
-
-                        var completedOrdersPostedTweet = Tweet.PublishTweetInReplyTo(completedOrdersTweet, prevTweet);
-
-                        prevTweet = completedOrdersPostedTweet;
-                        foreach (var openOrderTweet in openOrdersTweets)
-                        {
-                            currTweet = Tweet.PublishTweetInReplyTo(openOrderTweet, prevTweet);
-                            prevTweet = currTweet;
-                        };
-
-
-                        Tweet.PublishTweetInReplyTo(detailsTweet, prevTweet);
-
-                        var channelId = Convert.ToUInt64(_discordCredentials.Value.ChannelId);
-
-                        var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
-                        await discordChannel.SendMessageAsync(parentTweet.Url);
-                    }
+                    _publishService.Publish();
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                counter = 0;
             }
         }
 
