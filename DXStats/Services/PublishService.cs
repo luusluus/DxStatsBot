@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using DXStats.Configuration;
 using DXStats.Enums;
 using DXStats.Interfaces;
@@ -71,10 +70,12 @@ namespace DXStats.Services
 
                     Tweet.PublishTweetInReplyTo(detailsTweet, prevTweet);
 
-                    var channelId = Convert.ToUInt64(_discordCredentials.Value.ChannelId);
 
-                    var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
-                    discordChannel.SendMessageAsync(parentTweet.Url);
+                    // TODO: Fix discordchannel null
+                    //var channelId = Convert.ToUInt64(_discordCredentials.Value.ChannelId);
+
+                    //var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
+                    //discordChannel.SendMessageAsync(parentTweet.Url);
                 }
             }
             catch (Exception ex)
