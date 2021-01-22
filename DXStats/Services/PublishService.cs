@@ -1,9 +1,11 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using DXStats.Configuration;
 using DXStats.Enums;
 using DXStats.Interfaces;
 using Microsoft.Extensions.Options;
 using System;
+using Tweetinvi;
 
 namespace DXStats.Services
 {
