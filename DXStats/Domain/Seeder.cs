@@ -19,6 +19,12 @@ namespace DXStats.Domain
 {
     public class Seeder : ISeeder
     {
+        static readonly HashSet<string> cryptocompareUnsupportedCoins = new HashSet<string>()
+        {
+            "ABET", "AEX", "AGM", "APR", "AUS", "BAD", "BZX", "CDZC", "CHN", "CIV", "CNMC", "DVT", "FGC", "GEEK", "GMCN", "GXX", "HASH", "HATCH", "JIYOX", "KYDC", "LPC", "MERGE", "MLM", "MNP", "NORT", "NYX", "ODIN", "OHMC", "OPCX", "PHL", "QBIC", "SUB1X", "XN", "REEX"}; // Temporary row. Remove when cryptocompare api is updated
+
+        static readonly HashSet<string> xbridgeNoLongerSupportedCoins = new HashSet<string>() { "OHM", "BWK", "XST", "CCBC", "MPWR", "KNG", "MRX", "TRB" };
+
         const string ENDPOINT_GECKO = "https://api.coingecko.com/api/v3/";
 
         private readonly List<CoinGeckoCoin> _coinGeckoCoins;
@@ -29,11 +35,11 @@ namespace DXStats.Domain
             _httpClientCoinGecko = new HttpClient();
             _httpClientCoinGecko.BaseAddress = new Uri(ENDPOINT_GECKO);
             _coinGeckoCoins = getCoinGeckoCoins();
+            cryptocompareUnsupportedCoins.UnionWith(xbridgeNoLongerSupportedCoins);
         }
 
         private List<CoinGeckoCoin> getCoinGeckoCoins()
         {
-
             var coinListResponse = _httpClientCoinGecko.GetAsync("coins/list").Result;
 
             var coinListResponseContent = coinListResponse.Content;
@@ -214,6 +220,14 @@ namespace DXStats.Domain
                     trade.PriceUSD = coinGeckoPrice.USD;
 
                     sleepTime = 600;
+                }
+                else if (cryptocompareUnsupportedCoins.Contains(maker))
+                {
+                    Console.WriteLine(maker + " not xbridge supported");
+                    trade.PriceBLOCK = 0m;
+                    trade.PriceBTC = 0m;
+                    trade.PriceUSD = 0m;
+                    sleepTime = 0;
                 }
                 else // BTC and others
                 {
