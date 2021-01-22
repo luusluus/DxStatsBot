@@ -196,7 +196,7 @@ namespace DXStats.Persistence
                         { "BLOCK",  g.VolumeSumBLOCK }
                     };
 
-                    if (!g.Key.Equals("BLOCK") && !g.Key.Equals("USD"))
+                    if (!g.Key.Equals("BLOCK") && !g.Key.Equals("USD") && !g.Key.Equals("BTC"))
                         volumes.Add(g.Key, g.VolumeSum);
 
                     return new CoinTradeStatistics
