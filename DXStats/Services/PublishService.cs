@@ -47,32 +47,32 @@ namespace DXStats.Services
 
                     Console.WriteLine(detailsTweet);
 
-                    //var parentTweet = Tweet.PublishTweet(mainTweet);
+                    var parentTweet = Tweet.PublishTweet(mainTweet);
 
-                    //Tweetinvi.Models.ITweet prevTweet = parentTweet;
-                    //Tweetinvi.Models.ITweet currTweet;
-                    //foreach (var childTweet in childrenTweets)
-                    //{
-                    //    currTweet = Tweet.PublishTweetInReplyTo(childTweet, prevTweet);
-                    //    prevTweet = currTweet;
-                    //};
+                    Tweetinvi.Models.ITweet prevTweet = parentTweet;
+                    Tweetinvi.Models.ITweet currTweet;
+                    foreach (var childTweet in childrenTweets)
+                    {
+                        currTweet = Tweet.PublishTweetInReplyTo(childTweet, prevTweet);
+                        prevTweet = currTweet;
+                    };
 
-                    //var completedOrdersPostedTweet = Tweet.PublishTweetInReplyTo(completedOrdersTweet, prevTweet);
+                    var completedOrdersPostedTweet = Tweet.PublishTweetInReplyTo(completedOrdersTweet, prevTweet);
 
-                    //prevTweet = completedOrdersPostedTweet;
-                    //foreach (var openOrderTweet in openOrdersTweets.Result)
-                    //{
-                    //    currTweet = Tweet.PublishTweetInReplyTo(openOrderTweet, prevTweet);
-                    //    prevTweet = currTweet;
-                    //};
+                    prevTweet = completedOrdersPostedTweet;
+                    foreach (var openOrderTweet in openOrdersTweets.Result)
+                    {
+                        currTweet = Tweet.PublishTweetInReplyTo(openOrderTweet, prevTweet);
+                        prevTweet = currTweet;
+                    };
 
 
-                    //Tweet.PublishTweetInReplyTo(detailsTweet, prevTweet);
+                    Tweet.PublishTweetInReplyTo(detailsTweet, prevTweet);
 
-                    //var channelId = Convert.ToUInt64(_discordCredentials.Value.ChannelId);
+                    var channelId = Convert.ToUInt64(_discordCredentials.Value.ChannelId);
 
-                    //var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
-                    //discordChannel.SendMessageAsync(parentTweet.Url);
+                    var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
+                    discordChannel.SendMessageAsync(parentTweet.Url);
 
                 }
             }
