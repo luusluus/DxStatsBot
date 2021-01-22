@@ -108,6 +108,8 @@ namespace DXStats.Domain
             const int NUM_COLUMNS = 12;
             var tradeData = new object[trades.Count, NUM_COLUMNS];
 
+            var setPrecision = new NumberFormatInfo { NumberDecimalDigits = 10 };
+
             for (int i = 0; i < trades.Count; i++)
             {
                 var trade = trades[i];
@@ -122,9 +124,9 @@ namespace DXStats.Domain
                         trade.TakerSize,
                         trade.Maker,
                         trade.MakerSize,
-                        trade.PriceUSD,
-                        trade.PriceBTC,
-                        trade.PriceBLOCK
+                        trade.PriceUSD.ToString("N", setPrecision),
+                        trade.PriceBTC.ToString("N", setPrecision),
+                        trade.PriceBLOCK.ToString("N", setPrecision)
                     };
                 for (int j = 0; j < NUM_COLUMNS; j++)
                 {
@@ -238,11 +240,11 @@ namespace DXStats.Domain
                     trade.PriceBTC = coinGeckoPrice.BTC;
                     trade.PriceUSD = coinGeckoPrice.USD;
 
-                    var historyBLOCK = getCoinGeckoPriceHistory(maker, date);
+                    var historyBLOCK = getCoinGeckoPriceHistory("BLOCK", date);
 
                     CoinGeckoPrice coinGeckoPriceBLOCK = parseCoinGeckoPrices(historyBLOCK);
 
-                    trade.PriceBLOCK = coinGeckoPrice.BTC * (1 / coinGeckoPriceBLOCK.USD);
+                    trade.PriceBLOCK = coinGeckoPrice.USD * (1 / coinGeckoPriceBLOCK.USD);
 
                     sleepTime = 1200;
                 }

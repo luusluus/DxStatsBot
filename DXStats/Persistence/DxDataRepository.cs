@@ -146,9 +146,9 @@ namespace DXStats.Persistence
                 NumberOfTrades = trades.Count(),
                 Volumes = new Dictionary<string, decimal>
                 {
-                    { "USD",  trades.Sum(t => t.MakerSize * t.PriceBLOCK) },
+                    { "USD",  trades.Sum(t => t.MakerSize * t.PriceUSD) },
                     { "BTC",  trades.Sum(t => t.MakerSize * t.PriceBTC) },
-                    { "BLOCK",  trades.Sum(t => t.MakerSize * t.PriceUSD) }
+                    { "BLOCK",  trades.Sum(t => t.MakerSize * t.PriceBLOCK) }
                 }
             };
         }

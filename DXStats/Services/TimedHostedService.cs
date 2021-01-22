@@ -12,7 +12,7 @@ namespace DXStats.Services
     {
         private readonly IServiceScopeFactory _scopeFactory;
 
-        const double interval = 1000 * 60 * 5; // 5 minutes
+        const double interval = 300000; // 5 min
 
         private int counter = 0;
 
@@ -27,14 +27,26 @@ namespace DXStats.Services
         {
             Console.WriteLine("Dx Bot Service running.");
 
-            using (var scope = _scopeFactory.CreateScope())
+            try
             {
-                var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
 
-                _publishService.Publish();
+                    _publishService.Publish();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                throw;
             }
 
+
             counter = 0;
+
+            Console.WriteLine("Starting fetchign trading data");
 
             _timer = new System.Timers.Timer(interval);
             _timer.Elapsed += new ElapsedEventHandler(GetTradingData);
@@ -45,7 +57,7 @@ namespace DXStats.Services
 
         private async void GetTradingData(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("Snapshot");
+            Console.WriteLine("Get Trading Data");
 
             Console.WriteLine("Block delta: " + counter);
 

@@ -75,7 +75,6 @@ namespace DXStats.Services
 
                     var discordChannel = _discordSocketClient.GetChannel(channelId) as IMessageChannel;
                     discordChannel.SendMessageAsync(parentTweet.Url);
-
                 }
             }
             catch (Exception ex)

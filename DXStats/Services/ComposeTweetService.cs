@@ -98,10 +98,18 @@ namespace DXStats.Services
                 if (totalCoin.NumberOfTrades > 0)
                 {
                     string tweet = "Trading Volume $" + coin + ":\n\n";
+                    decimal volumeUSD = totalCoin.Volumes["USD"];
+                    decimal volumeBTC = totalCoin.Volumes["BTC"];
+                    decimal volumeBLOCK = totalCoin.Volumes["BLOCK"];
 
-                    tweet += "$USD: $" + totalCoin.Volumes["USD"].ToString("N2", CultureInfo.InvariantCulture) + "\n";
-                    tweet += "$BTC: " + totalCoin.Volumes["BTC"].ToString("N3", CultureInfo.InvariantCulture) + " BTC\n";
-                    tweet += "$BLOCK: " + totalCoin.Volumes["BLOCK"].ToString("N3", CultureInfo.InvariantCulture) + " BLOCK\n";
+                    if (!volumeUSD.Equals(0))
+                        tweet += "$USD: $" + totalCoin.Volumes["USD"].ToString("N2", CultureInfo.InvariantCulture) + "\n";
+
+                    if (!volumeBTC.Equals(0))
+                        tweet += "$BTC: " + totalCoin.Volumes["BTC"].ToString("N3", CultureInfo.InvariantCulture) + " BTC\n";
+
+                    if (!volumeBLOCK.Equals(0))
+                        tweet += "$BLOCK: " + totalCoin.Volumes["BLOCK"].ToString("N3", CultureInfo.InvariantCulture) + " BLOCK\n";
 
                     if (!units.Contains(coin))
                     {
