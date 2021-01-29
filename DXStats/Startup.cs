@@ -13,7 +13,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http;
 using System;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -83,6 +85,8 @@ namespace DXStats
                     .Accept
                     .Add(new MediaTypeWithQualityHeaderValue("application/json"));
             });
+
+            services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
 
             var twitterCredentials = Configuration.GetSection("Twitter").Get<TwitterCredentials>();
 

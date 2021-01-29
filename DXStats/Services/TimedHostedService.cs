@@ -57,8 +57,6 @@ namespace DXStats.Services
 
         private async void GetTradingData(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("Get Trading Data");
-
             Console.WriteLine("Block delta: " + counter);
 
             using (var scope = _scopeFactory.CreateScope())
