@@ -27,21 +27,21 @@ namespace DXStats.Services
         {
             Console.WriteLine("Dx Bot Service running.");
 
-            //try
-            //{
-            //    using (var scope = _scopeFactory.CreateScope())
-            //    {
-            //        var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
+            try
+            {
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
 
-            //        _publishService.Publish();
-            //    }
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine(e.Message);
-            //    Console.WriteLine(e.StackTrace);
-            //    throw;
-            //}
+                    _publishService.Publish();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                throw;
+            }
 
 
             counter = 0;
