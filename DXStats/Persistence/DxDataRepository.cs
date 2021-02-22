@@ -41,18 +41,14 @@ namespace DXStats.Persistence
         public void AddTradingData(List<GetTradingDataResponse> tradingData)
         {
 
-            var trades = tradingData.Select(td =>
+            var trades = tradingData
+                .Where(td => !cryptocompareUnsupportedCoins.Contains(td.Maker) && !cryptocompareUnsupportedCoins.Contains(td.Taker))
+                .Select(td =>
             {
-                decimal priceBLOCK = 0;
-                decimal priceBTC = 0;
-                decimal priceUSD = 0;
-                if (!cryptocompareUnsupportedCoins.Contains(td.Maker))
-                {
-                    var coinPrices = _coinPriceService.GetCoinPrice(new List<string> { td.Maker.ToUpper() }, new List<string> { "BLOCK", "USD", "BTC" });
-                    priceBLOCK = coinPrices[td.Maker]["BLOCK"];
-                    priceBTC = coinPrices[td.Maker]["BTC"];
-                    priceUSD = coinPrices[td.Maker]["USD"];
-                }
+                var coinPrices = _coinPriceService.GetCoinPrice(new List<string> { td.Maker.ToUpper() }, new List<string> { "BLOCK", "USD", "BTC" });
+                var priceBLOCK = coinPrices[td.Maker]["BLOCK"];
+                var priceBTC = coinPrices[td.Maker]["BTC"];
+                var priceUSD = coinPrices[td.Maker]["USD"];
 
                 return new Trade
                 {
