@@ -4,6 +4,7 @@ using DXStats.Domain.Dto;
 using DXStats.Domain.Entity;
 using DXStats.Enums;
 using DXStats.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -102,11 +103,31 @@ namespace DXStats.Persistence
             coinStats.ForEach(c =>
             {
                 coin = _context.Coins.FirstOrDefault(db => db.Id.Equals(c.Id));
-                coin.NumberOfTrades += c.NumberOfTrades;
-                coin.Volume += c.Volume;
-                coin.VolumeUSD += c.VolumeUSD;
-                coin.VolumeBTC += c.VolumeBTC;
-                coin.VolumeBLOCK += c.VolumeBLOCK;
+
+                if (coin != null)
+                {
+                    coin.NumberOfTrades += c.NumberOfTrades;
+                    coin.Volume += c.Volume;
+                    coin.VolumeUSD += c.VolumeUSD;
+                    coin.VolumeBTC += c.VolumeBTC;
+                    coin.VolumeBLOCK += c.VolumeBLOCK;
+                    _context.Entry(coin).State = EntityState.Modified;
+
+                }
+                else
+                {
+                    coin = new Coin
+                    {
+                        NumberOfTrades = c.NumberOfTrades,
+                        Id = c.Id,
+                        SupportedSince = DateTime.Now,
+                        Volume = c.Volume,
+                        VolumeBLOCK = c.VolumeBLOCK,
+                        VolumeBTC = c.VolumeBTC,
+                        VolumeUSD = c.VolumeUSD
+                    };
+                    _context.Entry(coin).State = EntityState.Added;
+                }
             });
         }
 

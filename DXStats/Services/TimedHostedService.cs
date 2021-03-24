@@ -66,28 +66,51 @@ namespace DXStats.Services
                 var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
                 // 1 block per minute. 5 blocks
+                try
+                {
+                    var tradingData = await _dxDataService.GetTradingData(5);
 
-                var tradingData = await _dxDataService.GetTradingData(5);
-                _dxDataRepository.AddTradingData(tradingData);
+                    _dxDataRepository.AddCoinStatistics(tradingData);
 
+                    _dxDataRepository.AddTradingData(tradingData);
 
-                _dxDataRepository.AddCoinStatistics(tradingData);
-
-                _unitOfWork.Complete();
+                    _unitOfWork.Complete();
+                }
+                catch (ApplicationException ae)
+                {
+                    Console.WriteLine(ae.Message);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    counter++;
+                }
             }
-
-            counter++;
 
             if (counter == 2016) // 1440 blocks/minutes in a day. 7 days: 1440*7. (1440*7)/5 = 2016 * 5 minutes
             {
-
-                using (var scope = _scopeFactory.CreateScope())
+                try
                 {
-                    var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
+                    using (var scope = _scopeFactory.CreateScope())
+                    {
+                        var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
 
-                    _publishService.Publish();
+                        _publishService.Publish();
+                    }
+
                 }
-                counter = 0;
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    counter = 0;
+                }
+
             }
         }
 

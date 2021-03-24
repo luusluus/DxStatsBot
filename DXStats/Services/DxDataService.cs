@@ -37,7 +37,7 @@ namespace DXStats.Services
             var tradingDataResponse = await _client.GetAsync(queryString);
 
             if (!tradingDataResponse.IsSuccessStatusCode)
-                throw new ApplicationException();
+                throw new ApplicationException(tradingDataResponse.ReasonPhrase);
 
             string tradingDataResult = await tradingDataResponse.Content.ReadAsStringAsync();
 
