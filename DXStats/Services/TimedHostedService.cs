@@ -29,12 +29,12 @@ namespace DXStats.Services
 
             try
             {
-                //using (var scope = _scopeFactory.CreateScope())
-                //{
-                //    var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var _publishService = scope.ServiceProvider.GetRequiredService<IPublishService>();
 
-                //    _publishService.Publish();
-                //}
+                    _publishService.Publish();
+                }
             }
             catch (Exception e)
             {
