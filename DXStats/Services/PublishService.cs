@@ -82,7 +82,6 @@ namespace DXStats.Services
             {
                 Console.WriteLine(ex.Message);
                 Console.WriteLine(ex.StackTrace);
-                throw ex;
             }
         }
     }
